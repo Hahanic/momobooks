@@ -1,0 +1,260 @@
+import { useCallback, useEffect, useRef, useState } from "react";
+
+import { Button, Menu, Tooltip, Tree, type TreeDataNode } from "antd";
+
+import {
+  CaretDownOutlined,
+  ClockCircleOutlined,
+  DoubleLeftOutlined,
+  DoubleRightOutlined,
+  FileTextOutlined,
+  FolderOpenOutlined,
+  FolderOutlined,
+  HomeOutlined,
+  PlusOutlined,
+  SearchOutlined,
+  StarOutlined,
+  TeamOutlined,
+} from "@ant-design/icons";
+
+import { useLayoutStore } from "../../../store/layoutStore";
+
+// 常量定义
+const MIN_WIDTH = 220;
+const MAX_WIDTH = 600;
+
+const staticMenuItems = [
+  { key: "home", icon: <HomeOutlined />, label: "工作台" },
+  { key: "recent", icon: <ClockCircleOutlined />, label: "最近使用" },
+  { key: "starred", icon: <StarOutlined />, label: "我的收藏" },
+  { key: "team", icon: <TeamOutlined />, label: "团队文档" },
+];
+
+const initialTreeData: TreeDataNode[] = [
+  {
+    title: "个人笔记空间",
+    key: "root-1",
+    children: [
+      {
+        title: "前端技术栈",
+        key: "folder-1",
+        children: [
+          { title: "React 19 新特性学习", key: "doc-1-1", isLeaf: true },
+          { title: "Zustand 状态管理", key: "doc-1-2", isLeaf: true },
+        ],
+      },
+      {
+        title: "产品设计灵感",
+        key: "folder-2",
+        children: [{ title: "竞品分析：Notion vs 飞书", key: "doc-2-1", isLeaf: true }],
+      },
+      { title: "本周待办事项", key: "doc-root-1", isLeaf: true },
+    ],
+  },
+  {
+    title: "项目文档 - Momobooks",
+    key: "root-2",
+    children: [
+      { title: "需求规格说明书", key: "doc-3-1", isLeaf: true },
+      { title: "API 接口文档", key: "doc-3-2", isLeaf: true },
+    ],
+  },
+];
+
+const Sidebar = () => {
+  const {
+    sidebarWidth: globalWidth,
+    isCollapsed,
+    setSidebarWidth: setGlobalWidth,
+    toggleCollapse,
+  } = useLayoutStore();
+
+  // 本地状态用于拖拽时的即时渲染
+  const [localWidth, setLocalWidth] = useState(globalWidth);
+
+  // 同步全局状态到本地
+  useEffect(() => {
+    setLocalWidth(globalWidth);
+  }, [globalWidth]);
+
+  // 拖拽
+  const [isResizing, setIsResizing] = useState<boolean>(false);
+
+  const isResizingRef = useRef<boolean>(false);
+  const widthRef = useRef<number>(localWidth);
+
+  const handleMouseMove = useCallback((e: MouseEvent) => {
+    if (!isResizingRef.current) return;
+
+    let newWidth = e.clientX;
+    if (newWidth < MIN_WIDTH) newWidth = MIN_WIDTH;
+    if (newWidth > MAX_WIDTH) newWidth = MAX_WIDTH;
+
+    widthRef.current = newWidth;
+    setLocalWidth(newWidth);
+  }, []);
+
+  const handleMouseUp = useCallback(() => {
+    if (!isResizingRef.current) return;
+    isResizingRef.current = false;
+    setIsResizing(false);
+
+    document.body.style.cursor = "";
+    document.body.style.userSelect = "";
+
+    setGlobalWidth(widthRef.current);
+  }, [setGlobalWidth]);
+
+  const handleMouseDown = useCallback(
+    (e: React.MouseEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+
+      // 如果是折叠状态，不允许拖拽
+      if (isCollapsed) return;
+
+      isResizingRef.current = true;
+      setIsResizing(true); // 触发状态更新，让 useEffect 去添加监听
+
+      document.body.style.cursor = "col-resize";
+      document.body.style.userSelect = "none";
+    },
+    [isCollapsed],
+  );
+
+  // 清理副作用
+  useEffect(() => {
+    if (isResizing) {
+      window.addEventListener("mousemove", handleMouseMove);
+      window.addEventListener("mouseup", handleMouseUp);
+    }
+
+    // 清理函数：当 isResizing 变回 false 或组件卸载时自动执行
+    // 依赖项变化，下一次执行之前执行
+    return () => {
+      window.removeEventListener("mousemove", handleMouseMove);
+      window.removeEventListener("mouseup", handleMouseUp);
+    };
+  }, [isResizing, handleMouseMove, handleMouseUp]);
+
+  return (
+    <>
+      <div
+        className="group relative h-full shrink-0 bg-[#F7F7F5]"
+        style={{
+          width: isCollapsed ? 0 : `${localWidth}px`,
+          overflow: "hidden",
+        }}
+      >
+        {/* 侧边栏内容容器 */}
+        <div className="flex h-full flex-col overflow-hidden">
+          {/* 顶部 Logo / 切换区 */}
+          <div className="flex h-16 items-center px-3 py-4">
+            {/* 收起按钮 */}
+            <div className="fixed top-4 left-1 z-50 opacity-50 transition-opacity hover:opacity-100">
+              <Tooltip title={isCollapsed ? "展开侧边栏" : "收起侧边栏"} placement="right">
+                <Button
+                  icon={isCollapsed ? <DoubleRightOutlined /> : <DoubleLeftOutlined />}
+                  onClick={toggleCollapse}
+                  type="text"
+                  className="text-gray-500 hover:bg-gray-100"
+                />
+              </Tooltip>
+            </div>
+            <div className="ml-8 text-center text-lg text-gray-700">📚 Momobooks</div>
+          </div>
+
+          {/* 搜索与新建 */}
+          <div className="mb-2 space-y-2 px-3">
+            <div className="group/search relative cursor-pointer">
+              <div className="flex items-center gap-2 rounded-md border border-gray-200 bg-white px-3 py-1.5 text-sm text-gray-500 transition-colors hover:bg-gray-50">
+                <SearchOutlined />
+                <span>搜索</span>
+                <span className="ml-auto text-xs text-gray-300">⌘K</span>
+              </div>
+            </div>
+
+            <Button
+              type="primary"
+              icon={<PlusOutlined />}
+              block
+              className="border-none bg-blue-600 shadow-sm hover:bg-blue-500"
+            >
+              新建文档
+            </Button>
+          </div>
+
+          {/* 菜单列表区域 */}
+          <div className="flex-1 overflow-x-auto overflow-y-auto py-2">
+            <Menu
+              mode="inline"
+              defaultSelectedKeys={["home"]}
+              items={staticMenuItems}
+              style={{ backgroundColor: "#F7F7F5" }}
+            />
+            <div className="px-4 py-1 text-xs font-medium text-gray-400 select-none">我的文档</div>
+            <div className="px-3">
+              <Tree
+                style={{
+                  backgroundColor: "#F7F7F5",
+                  textOverflow: "ellipsis",
+                  whiteSpace: "nowrap",
+                }}
+                blockNode
+                showIcon
+                treeData={initialTreeData}
+                // 自定义展开图标：使用类似 Notion 的小三角
+                switcherIcon={({ expanded }) => (
+                  <CaretDownOutlined
+                    className={`text-xs text-gray-400 transition-transform duration-200 ${
+                      !expanded ? "-rotate-90" : ""
+                    }`}
+                  />
+                )}
+                // 自定义节点图标逻辑
+                icon={(props) => {
+                  if (props.isLeaf) {
+                    return <FileTextOutlined className="text-gray-400" />;
+                  }
+                  return props.expanded ? (
+                    <FolderOpenOutlined className="text-blue-500" />
+                  ) : (
+                    <FolderOutlined className="text-gray-500" />
+                  );
+                }}
+                // 选中事件
+                onSelect={(selectedKeys, info) => {
+                  console.log("Selected:", selectedKeys, info.node.title);
+                  // TODO: 这里执行路由跳转，例如 navigate(`/doc/${info.node.key}`)
+                }}
+                className="bg-transparent text-gray-600"
+                height={500} // 虚拟滚动高度，如果文档很多建议开启
+                virtual={false} // 暂时关闭虚拟滚动，以免样式冲突
+              />
+            </div>
+          </div>
+
+          {/* 底部操作区 */}
+          <div className="border-t border-gray-200 p-3 text-xs text-gray-400">Trash / Settings</div>
+        </div>
+
+        {/* 拽条 */}
+        <div
+          onMouseDown={handleMouseDown}
+          className="group/resizer absolute top-0 right-[-7px] z-10 flex h-full w-4 cursor-col-resize justify-center transition-all hover:right-[-7px]"
+        >
+          {/* 视觉线：平时是边框颜色，hover 或拖拽时变蓝 */}
+          <div
+            className={`h-full w-px transition-colors duration-150 ${
+              isResizing
+                ? "w-0.5 bg-blue-500"
+                : "bg-gray-200 group-hover/resizer:w-0.5 group-hover/resizer:bg-blue-500"
+            } `}
+          />
+        </div>
+      </div>
+    </>
+  );
+};
+
+export default Sidebar;

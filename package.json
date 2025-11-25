@@ -1,0 +1,56 @@
+{
+  "name": "momobooks",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "dev": "concurrently \"pnpm --filter @momobooks/server dev\" \"pnpm --filter web dev\"",
+    "build": "pnpm -r build",
+    "lint": "pnpm -r lint",
+    "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md,css,scss}\"",
+    "commit": "git-cz",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "prepare": "husky"
+  },
+  "config": {
+    "commitizen": {
+      "path": "node_modules/cz-git"
+    }
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^20.1.0",
+    "@commitlint/config-conventional": "^20.0.0",
+    "@trivago/prettier-plugin-sort-imports": "^6.0.0",
+    "@types/node": "^24.10.1",
+    "commitizen": "^4.3.1",
+    "concurrently": "^9.2.1",
+    "cz-git": "^1.12.0",
+    "eslint": "^9.39.1",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.2.7",
+    "prettier": "^3.6.2",
+    "prettier-plugin-tailwindcss": "^0.7.1",
+    "typescript": "^5.9.3"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "packageManager": "pnpm@10.23.0",
+  "lint-staged": {
+    "apps/web/**/*.{ts,tsx}": [
+      "eslint --fix --config apps/web/eslint.config.js",
+      "prettier --write"
+    ],
+    "apps/server/**/*.{ts,tsx}": [
+      "eslint --fix --config apps/server/eslint.config.js",
+      "prettier --write"
+    ],
+    "packages/shared/**/*.{ts,tsx}": [
+      "eslint --fix --config packages/shared/eslint.config.js",
+      "prettier --write"
+    ],
+    "*.{js,jsx,json,md,css,scss}": [
+      "prettier --write"
+    ]
+  }
+}
