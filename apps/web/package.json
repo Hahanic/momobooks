@@ -16,6 +16,7 @@
     "@tailwindcss/vite": "^4.1.17",
     "@tiptap/extension-collaboration": "^3.11.0",
     "@tiptap/extension-collaboration-caret": "^3.11.0",
+    "@tiptap/extension-heading": "^3.11.0",
     "@tiptap/extension-highlight": "^3.11.0",
     "@tiptap/extension-image": "^3.11.0",
     "@tiptap/extension-link": "^3.11.0",

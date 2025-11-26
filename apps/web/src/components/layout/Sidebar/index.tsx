@@ -1,12 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
-import { Button, Menu, Tooltip, Tree, type TreeDataNode } from "antd";
+import { Button, Menu, Tree, type TreeDataNode } from "antd";
 
 import {
   CaretDownOutlined,
   ClockCircleOutlined,
-  DoubleLeftOutlined,
-  DoubleRightOutlined,
   FileTextOutlined,
   FolderOpenOutlined,
   FolderOutlined,
@@ -16,6 +14,7 @@ import {
   StarOutlined,
   TeamOutlined,
 } from "@ant-design/icons";
+import { ListCollapseIcon, ListIndentDecreaseIcon } from "lucide-react";
 
 import { useLayoutStore } from "../../../store/layoutStore";
 
@@ -138,8 +137,8 @@ const Sidebar = () => {
   }, [isResizing, handleMouseMove, handleMouseUp]);
 
   return (
-    <>
-      <div
+    <div className="fixed z-20 h-full shrink-0 sm:static">
+      <aside
         className="group relative h-full shrink-0 bg-[#F7F7F5]"
         style={{
           width: isCollapsed ? 0 : `${localWidth}px`,
@@ -151,17 +150,15 @@ const Sidebar = () => {
           {/* 顶部 Logo / 切换区 */}
           <div className="flex h-16 items-center px-3 py-4">
             {/* 收起按钮 */}
-            <div className="fixed top-4 left-1 z-50 opacity-50 transition-opacity hover:opacity-100">
-              <Tooltip title={isCollapsed ? "展开侧边栏" : "收起侧边栏"} placement="right">
-                <Button
-                  icon={isCollapsed ? <DoubleRightOutlined /> : <DoubleLeftOutlined />}
-                  onClick={toggleCollapse}
-                  type="text"
-                  className="text-gray-500 hover:bg-gray-100"
-                />
-              </Tooltip>
+            <div className="opacity-50 transition-opacity hover:opacity-80">
+              <Button
+                icon={isCollapsed ? <ListCollapseIcon /> : <ListIndentDecreaseIcon />}
+                onClick={toggleCollapse}
+                type="text"
+                className="hover:bg-gray-80 text-gray-400"
+              />
             </div>
-            <div className="ml-8 text-center text-lg text-gray-700">📚 Momobooks</div>
+            <div className="ml-2 text-center text-lg text-gray-700">📚 Momobooks</div>
           </div>
 
           {/* 搜索与新建 */}
@@ -190,7 +187,7 @@ const Sidebar = () => {
               mode="inline"
               defaultSelectedKeys={["home"]}
               items={staticMenuItems}
-              style={{ backgroundColor: "#F7F7F5" }}
+              style={{ backgroundColor: "#F7F7F5", border: "none" }}
             />
             <div className="px-4 py-1 text-xs font-medium text-gray-400 select-none">我的文档</div>
             <div className="px-3">
@@ -241,7 +238,7 @@ const Sidebar = () => {
         {/* 拽条 */}
         <div
           onMouseDown={handleMouseDown}
-          className="group/resizer absolute top-0 right-[-7px] z-10 flex h-full w-4 cursor-col-resize justify-center transition-all hover:right-[-7px]"
+          className="group/resizer absolute top-0 right-[-7px] z-10 hidden h-full w-4 cursor-col-resize justify-center transition-all hover:right-[-7px] sm:flex"
         >
           {/* 视觉线：平时是边框颜色，hover 或拖拽时变蓝 */}
           <div
@@ -252,8 +249,8 @@ const Sidebar = () => {
             } `}
           />
         </div>
-      </div>
-    </>
+      </aside>
+    </div>
   );
 };
 

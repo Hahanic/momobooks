@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { ColorPicker, Drawer, Dropdown, Input, Modal } from "antd";
 
@@ -34,6 +34,20 @@ import {
 import { cn } from "../../lib/utils";
 import { useEditorStore } from "../../store/editorStore";
 
+const useToolbarUpdate = () => {
+  const { editor } = useEditorStore();
+  const [, forceUpdate] = useState({});
+
+  useEffect(() => {
+    if (!editor) return;
+    const handler = () => forceUpdate({});
+    editor.on("selectionUpdate", handler);
+    return () => {
+      editor.off("selectionUpdate", handler);
+    };
+  }, [editor]);
+};
+
 interface ToolbarButtonProps {
   onClick?: () => void;
   isActive?: boolean;
@@ -41,19 +55,19 @@ interface ToolbarButtonProps {
   className?: string;
 }
 
+const headings = [
+  { label: "Normal", value: 0, fontSize: "16px" },
+  { label: "Heading 1", value: 1, fontSize: "32px" },
+  { label: "Heading 2", value: 2, fontSize: "24px" },
+  { label: "Heading 3", value: 3, fontSize: "20px" },
+  { label: "Heading 4", value: 4, fontSize: "18px" },
+  { label: "Heading 5", value: 5, fontSize: "16px" },
+];
+
 // 标题级别按钮组件
 const HeadingLevelButton = () => {
   const { editor } = useEditorStore();
-
-  const headings = [
-    { label: "Normal", value: 0, fontSize: "16px" },
-    { label: "Heading 1", value: 1, fontSize: "32px" },
-    { label: "Heading 2", value: 2, fontSize: "24px" },
-    { label: "Heading 3", value: 3, fontSize: "20px" },
-    { label: "Heading 4", value: 4, fontSize: "18px" },
-    { label: "Heading 5", value: 5, fontSize: "16px" },
-  ];
-
+  useToolbarUpdate();
   const getCurrentHeading = (): string => {
     for (let level = 1; level <= 5; level++) {
       if (editor?.isActive("heading", { level })) {
@@ -102,18 +116,19 @@ const HeadingLevelButton = () => {
   );
 };
 
+const fonts = [
+  { label: "Arial", value: "Arial" },
+  { label: "Georgia", value: "Georgia" },
+  { label: "Impact", value: "Impact" },
+  { label: "Tahoma", value: "Tahoma" },
+  { label: "Times New Roman", value: "Times New Roman" },
+  { label: "Verdana", value: "Verdana" },
+];
+
 // 字体选择下拉菜单组件
 const FontFamilyButtons = () => {
   const { editor } = useEditorStore();
-
-  const fonts = [
-    { label: "Arial", value: "Arial" },
-    { label: "Georgia", value: "Georgia" },
-    { label: "Impact", value: "Impact" },
-    { label: "Tahoma", value: "Tahoma" },
-    { label: "Times New Roman", value: "Times New Roman" },
-    { label: "Verdana", value: "Verdana" },
-  ];
+  useToolbarUpdate();
 
   return (
     <Dropdown
@@ -145,6 +160,7 @@ const FontFamilyButtons = () => {
 // 字体大小按钮组件
 const FontSizeButton = () => {
   const { editor } = useEditorStore();
+  useToolbarUpdate();
 
   const currentFontSize = editor?.getAttributes("textStyle").fontSize || "16px";
 
@@ -238,6 +254,7 @@ const FontSizeButton = () => {
 // 文本颜色按钮组件
 const TextColorButton = () => {
   const { editor } = useEditorStore();
+  useToolbarUpdate();
 
   const value = editor?.getAttributes("textStyle").color || "#000000";
 
@@ -283,17 +300,18 @@ const TextColorButton = () => {
   );
 };
 
+const lineHeights = [
+  { label: "Default", value: "normal" },
+  { label: "2", value: "2" },
+  { label: "3", value: "3" },
+  { label: "4", value: "4" },
+  { label: "5", value: "5" },
+];
+
 // 行高按钮组件
 const LineHeightButton = () => {
   const { editor } = useEditorStore();
-
-  const lineHeights = [
-    { label: "Default", value: "normal" },
-    { label: "2", value: "2" },
-    { label: "3", value: "3" },
-    { label: "4", value: "4" },
-    { label: "5", value: "5" },
-  ];
+  useToolbarUpdate();
 
   return (
     <Dropdown
@@ -318,32 +336,33 @@ const LineHeightButton = () => {
   );
 };
 
+const alignments = [
+  {
+    label: "Align Left",
+    value: "left",
+    icon: AlignLeftIcon,
+  },
+  {
+    label: "Align Center",
+    value: "center",
+    icon: AlignCenterIcon,
+  },
+  {
+    label: "Align Right",
+    value: "right",
+    icon: AlignRightIcon,
+  },
+  {
+    label: "Align Justify",
+    value: "justify",
+    icon: AlignJustifyIcon,
+  },
+];
+
 // 对齐方式按钮组件
 const AlignButton = () => {
   const { editor } = useEditorStore();
-
-  const alignments = [
-    {
-      label: "Align Left",
-      value: "left",
-      icon: AlignLeftIcon,
-    },
-    {
-      label: "Align Center",
-      value: "center",
-      icon: AlignCenterIcon,
-    },
-    {
-      label: "Align Right",
-      value: "right",
-      icon: AlignRightIcon,
-    },
-    {
-      label: "Align Justify",
-      value: "justify",
-      icon: AlignJustifyIcon,
-    },
-  ];
+  useToolbarUpdate();
 
   return (
     <Dropdown
@@ -378,6 +397,7 @@ const AlignButton = () => {
 // 列表按钮组件
 const ListButton = () => {
   const { editor } = useEditorStore();
+  useToolbarUpdate();
 
   const lists = [
     {
@@ -502,6 +522,7 @@ const ImageButton = () => {
 // 链接按钮组件
 const LinkButton = () => {
   const { editor } = useEditorStore();
+  useToolbarUpdate();
   const [value, setValue] = useState("");
   const [isOpen, setIsOpen] = useState(false);
 
@@ -566,6 +587,101 @@ const ToolbarButton = ({ onClick, isActive, icon: Icon, className }: ToolbarButt
 
 const ToolbarSeparator = () => <div className="mx-1 h-4 w-px bg-neutral-300" />;
 
+const HistoryGroup = () => {
+  const { editor } = useEditorStore();
+  return (
+    <div className="flex items-center gap-x-0.5">
+      <ToolbarButton onClick={() => editor?.chain().focus().undo().run()} icon={Undo2Icon} />
+      <ToolbarButton onClick={() => editor?.chain().focus().redo().run()} icon={Redo2Icon} />
+      <ToolbarButton onClick={() => window.print()} icon={PrinterIcon} />
+      <ToolbarButton
+        onClick={() => {
+          const current = editor?.view.dom.getAttribute("spellcheck");
+          editor?.view.dom.setAttribute("spellcheck", current === "true" ? "false" : "true");
+        }}
+        icon={SpellCheckIcon}
+      />
+    </div>
+  );
+};
+
+const TypographyGroup = () => {
+  return (
+    <div className="flex items-center gap-x-0.5">
+      <HeadingLevelButton />
+      <FontFamilyButtons />
+      <FontSizeButton />
+    </div>
+  );
+};
+
+const FormatGroup = () => {
+  const { editor } = useEditorStore();
+  useToolbarUpdate();
+  return (
+    <div className="flex items-center gap-x-0.5">
+      <ToolbarButton
+        onClick={() => editor?.chain().focus().toggleBold().run()}
+        isActive={editor?.isActive("bold")}
+        icon={BoldIcon}
+      />
+      <ToolbarButton
+        onClick={() => editor?.chain().focus().toggleItalic().run()}
+        isActive={editor?.isActive("italic")}
+        icon={ItalicIcon}
+      />
+      <ToolbarButton
+        onClick={() => editor?.chain().focus().toggleUnderline().run()}
+        isActive={editor?.isActive("underline")}
+        icon={UnderlineIcon}
+      />
+      <ToolbarButton
+        onClick={() => editor?.chain().focus().toggleStrike().run()}
+        isActive={editor?.isActive("strike")}
+        icon={StrikethroughIcon}
+      />
+      <TextColorButton />
+      <ToolbarButton
+        onClick={() => editor?.chain().focus().clearNodes().unsetAllMarks().run()}
+        icon={RemoveFormattingIcon}
+      />
+    </div>
+  );
+};
+
+const ParagraphGroup = () => {
+  const { editor } = useEditorStore();
+  useToolbarUpdate();
+  return (
+    <div className="flex items-center gap-x-0.5">
+      <LineHeightButton />
+      <AlignButton />
+      <ListButton />
+      <ToolbarButton
+        onClick={() => editor?.chain().focus().toggleTaskList().run()}
+        isActive={editor?.isActive("taskList")}
+        icon={ListTodoIcon}
+      />
+    </div>
+  );
+};
+
+const InsertGroup = () => {
+  const { editor } = useEditorStore();
+  useToolbarUpdate();
+  return (
+    <div className="flex items-center gap-x-0.5">
+      <ImageButton />
+      <LinkButton />
+      <ToolbarButton
+        onClick={() => console.log("Add Comment")}
+        isActive={editor?.isActive("pendingComment")}
+        icon={MessageSquarePlusIcon}
+      />
+    </div>
+  );
+};
+
 const Toolbar = () => {
   const { editor } = useEditorStore();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -574,86 +690,15 @@ const Toolbar = () => {
     <>
       {/* Desktop Toolbar */}
       <div className="hidden w-full flex-wrap items-center sm:flex">
-        {/* 历史记录 */}
-        <div className="flex items-center gap-x-0.5">
-          <ToolbarButton onClick={() => editor?.chain().focus().undo().run()} icon={Undo2Icon} />
-          <ToolbarButton onClick={() => editor?.chain().focus().redo().run()} icon={Redo2Icon} />
-          <ToolbarButton onClick={() => window.print()} icon={PrinterIcon} />
-          <ToolbarButton
-            onClick={() => {
-              const current = editor?.view.dom.getAttribute("spellcheck");
-              editor?.view.dom.setAttribute("spellcheck", current === "true" ? "false" : "true");
-            }}
-            icon={SpellCheckIcon}
-          />
-        </div>
-
+        <HistoryGroup />
         <ToolbarSeparator />
-
-        {/* 文本样式 */}
-        <div className="flex items-center gap-x-0.5">
-          <HeadingLevelButton />
-          <FontFamilyButtons />
-          <FontSizeButton />
-        </div>
-
+        <TypographyGroup />
         <ToolbarSeparator />
-
-        {/* 字体格式 */}
-        <div className="flex items-center gap-x-0.5">
-          <ToolbarButton
-            onClick={() => editor?.chain().focus().toggleBold().run()}
-            isActive={editor?.isActive("bold")}
-            icon={BoldIcon}
-          />
-          <ToolbarButton
-            onClick={() => editor?.chain().focus().toggleItalic().run()}
-            isActive={editor?.isActive("italic")}
-            icon={ItalicIcon}
-          />
-          <ToolbarButton
-            onClick={() => editor?.chain().focus().toggleUnderline().run()}
-            isActive={editor?.isActive("underline")}
-            icon={UnderlineIcon}
-          />
-          <ToolbarButton
-            onClick={() => editor?.chain().focus().toggleStrike().run()}
-            isActive={editor?.isActive("strike")}
-            icon={StrikethroughIcon}
-          />
-          <TextColorButton />
-          <ToolbarButton
-            onClick={() => editor?.chain().focus().clearNodes().unsetAllMarks().run()}
-            icon={RemoveFormattingIcon}
-          />
-        </div>
-
+        <FormatGroup />
         <ToolbarSeparator />
-
-        {/* 段落格式 */}
-        <div className="flex items-center gap-x-0.5">
-          <LineHeightButton />
-          <AlignButton />
-          <ListButton />
-          <ToolbarButton
-            onClick={() => editor?.chain().focus().toggleTaskList().run()}
-            isActive={editor?.isActive("taskList")}
-            icon={ListTodoIcon}
-          />
-        </div>
-
+        <ParagraphGroup />
         <ToolbarSeparator />
-
-        {/* 插入元素 */}
-        <div className="flex items-center gap-x-0.5">
-          <ImageButton />
-          <LinkButton />
-          <ToolbarButton
-            onClick={() => console.log("Add Comment")}
-            isActive={editor?.isActive("pendingComment")}
-            icon={MessageSquarePlusIcon}
-          />
-        </div>
+        <InsertGroup />
       </div>
 
       {/* Mobile Toolbar */}
@@ -686,76 +731,27 @@ const Toolbar = () => {
           {/* History */}
           <div className="flex items-center gap-2">
             <span className="w-12 shrink-0 text-xs text-neutral-500">操作</span>
-            <ToolbarButton onClick={() => editor?.chain().focus().undo().run()} icon={Undo2Icon} />
-            <ToolbarButton onClick={() => editor?.chain().focus().redo().run()} icon={Redo2Icon} />
-            <ToolbarButton onClick={() => window.print()} icon={PrinterIcon} />
+            <HistoryGroup />
           </div>
           {/* Typography */}
           <div className="flex flex-col gap-2">
             <span className="text-xs text-neutral-500">排版</span>
-            <div className="flex flex-wrap items-center gap-2">
-              <HeadingLevelButton />
-              <FontFamilyButtons />
-              <FontSizeButton />
-            </div>
+            <TypographyGroup />
           </div>
           {/* Format */}
           <div className="flex flex-col gap-2">
             <span className="text-xs text-neutral-500">格式</span>
-            <div className="flex flex-wrap items-center gap-2">
-              <ToolbarButton
-                onClick={() => editor?.chain().focus().toggleBold().run()}
-                isActive={editor?.isActive("bold")}
-                icon={BoldIcon}
-              />
-              <ToolbarButton
-                onClick={() => editor?.chain().focus().toggleItalic().run()}
-                isActive={editor?.isActive("italic")}
-                icon={ItalicIcon}
-              />
-              <ToolbarButton
-                onClick={() => editor?.chain().focus().toggleUnderline().run()}
-                isActive={editor?.isActive("underline")}
-                icon={UnderlineIcon}
-              />
-              <ToolbarButton
-                onClick={() => editor?.chain().focus().toggleStrike().run()}
-                isActive={editor?.isActive("strike")}
-                icon={StrikethroughIcon}
-              />
-              <TextColorButton />
-              <ToolbarButton
-                onClick={() => editor?.chain().focus().clearNodes().unsetAllMarks().run()}
-                icon={RemoveFormattingIcon}
-              />
-            </div>
+            <FormatGroup />
           </div>
           {/* Paragraph */}
           <div className="flex flex-col gap-2">
             <span className="text-xs text-neutral-500">段落</span>
-            <div className="flex flex-wrap items-center gap-2">
-              <LineHeightButton />
-              <AlignButton />
-              <ListButton />
-              <ToolbarButton
-                onClick={() => editor?.chain().focus().toggleTaskList().run()}
-                isActive={editor?.isActive("taskList")}
-                icon={ListTodoIcon}
-              />
-            </div>
+            <ParagraphGroup />
           </div>
           {/* Insert */}
           <div className="flex flex-col gap-2">
             <span className="text-xs text-neutral-500">插入</span>
-            <div className="flex flex-wrap items-center gap-2">
-              <ImageButton />
-              <LinkButton />
-              <ToolbarButton
-                onClick={() => console.log("Add Comment")}
-                isActive={editor?.isActive("pendingComment")}
-                icon={MessageSquarePlusIcon}
-              />
-            </div>
+            <InsertGroup />
           </div>
         </div>
       </Drawer>

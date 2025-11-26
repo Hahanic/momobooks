@@ -9,3 +9,9 @@ body {
   margin: 0;
   padding: 0;
 }
+
+.ant-anchor-link-title {
+  color: #646a73 !important;
+  font-size: 14px !important;
+  line-height: 22px !important;
+}

@@ -1,4 +1,7 @@
 .tiptap {
+  p {
+    overflow-wrap: anywhere;
+  }
   /* Heading styles */
   font-size: 16px;
   h1,

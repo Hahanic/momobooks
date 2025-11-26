@@ -6,18 +6,24 @@ interface LayoutState {
   isCollapsed: boolean;
   setSidebarWidth: (width: number) => void;
   toggleCollapse: () => void;
+  isAnchorVisible: boolean;
+  toggleAnchorVisibility: () => void;
 }
 
 export const useLayoutStore = create<LayoutState>()(
   persist(
     (set) => ({
-      sidebarWidth: 240, // 默认宽度
+      // 侧边栏
+      sidebarWidth: 240,
       isCollapsed: false,
       setSidebarWidth: (width) => {
-        console.log("设置侧边栏宽度:", width);
         set({ sidebarWidth: width });
       },
       toggleCollapse: () => set((state) => ({ isCollapsed: !state.isCollapsed })),
+
+      // 锚点栏
+      isAnchorVisible: true,
+      toggleAnchorVisibility: () => set((state) => ({ isAnchorVisible: !state.isAnchorVisible })),
     }),
     {
       name: "momobooks-layout-storage",

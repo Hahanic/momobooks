@@ -1,6 +1,4 @@
-import { Link } from "react-router-dom";
-
-import { Avatar, Button, Dropdown, Flex, Image, type MenuProps, Tooltip } from "antd";
+import { Avatar, Button, Dropdown, Flex, type MenuProps, Tooltip } from "antd";
 
 import { PlusOutlined, SearchOutlined } from "@ant-design/icons";
 import {
@@ -12,6 +10,8 @@ import {
   FilePlusIcon,
   GlobeIcon,
   ItalicIcon,
+  ListIndentDecreaseIcon,
+  ListIndentIncrease,
   PrinterIcon,
   Redo2Icon,
   RemoveFormattingIcon,
@@ -25,9 +25,12 @@ import {
 } from "lucide-react";
 
 import { useEditorStore } from "../../store/editorStore";
+import { useLayoutStore } from "../../store/layoutStore";
 
 const DocumentNavbar = () => {
   const { editor } = useEditorStore();
+  const { isCollapsed, toggleCollapse } = useLayoutStore();
+
   const isEditing = false;
 
   const menuItems: MenuProps["items"][] = [
@@ -203,10 +206,20 @@ const DocumentNavbar = () => {
 
   return (
     <>
-      <div className="flex items-center justify-center gap-2">
-        <Link to="/" className="hidden sm:block">
-          <Image src="/momo.svg" height={32} alt="Momobooks Logo" preview={false} />
-        </Link>
+      <div className="flex items-center justify-center gap-0.5">
+        {/* 收起按钮 */}
+        {!isCollapsed ? (
+          <></>
+        ) : (
+          <div className="opacity-50 transition-opacity hover:opacity-80">
+            <Button
+              icon={isCollapsed ? <ListIndentIncrease /> : <ListIndentDecreaseIcon />}
+              onClick={toggleCollapse}
+              type="text"
+              className="hover:bg-gray-80 text-gray-400"
+            />
+          </div>
+        )}
         <div className="flex flex-col">
           {/* 标题 和 云 */}
           <div className="flex items-center gap-2">
@@ -251,7 +264,7 @@ const DocumentNavbar = () => {
         </Flex>
       </div>
       <div className="shrink-0">
-        <Avatar size={32} />
+        <Avatar size={32} src="/avatar.jpg" />
       </div>
     </>
   );
