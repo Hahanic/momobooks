@@ -62,4 +62,6 @@ const DocumentSchema: Schema = new Schema(
 // 复合索引：加速 "查询某用户根目录下的活跃文档"
 DocumentSchema.index({ owner_id: 1, parent_id: 1, status: 1 });
 
-export const Doc = mongoose.model<IDocument>("Document", DocumentSchema);
+const Doc = mongoose.model<IDocument>("Document", DocumentSchema);
+
+export default Doc;

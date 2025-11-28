@@ -21,4 +21,6 @@ const DocumentStateSchema: Schema = new Schema(
   { timestamps: true },
 );
 
-export const DocState = mongoose.model<IDocumentState>("DocumentState", DocumentStateSchema);
+const DocState = mongoose.model<IDocumentState>("DocumentState", DocumentStateSchema);
+
+export default DocState;

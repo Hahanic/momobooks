@@ -1,24 +1,26 @@
 .tiptap {
+  font-size: 16px;
   p {
     overflow-wrap: anywhere;
+    margin-top: 8px;
+    margin-bottom: 8px;
   }
+
   /* Heading styles */
-  font-size: 16px;
   h1,
   h2,
   h3,
   h4,
   h5,
   h6 {
-    line-height: 1.1;
-    margin-top: 2.5rem;
     text-wrap: pretty;
+    overflow-wrap: anywhere;
+    font-weight: 600;
   }
 
   h1,
   h2 {
-    margin-top: 3.5rem;
-    margin-bottom: 1.5rem;
+    margin-top: 16px;
   }
 
   h1 {
@@ -245,4 +247,68 @@
     outline: 1px solid rgba(0, 0, 0, 0.25);
     border-radius: 0.125rem;
   }
+
+  /* Code block */
+  pre {
+    background-color: #f3f4f6;
+    border-radius: 0.5rem;
+    color: #1f2937;
+    font-family: "JetBrains Mono", "Fira Code", Consolas, monospace;
+    padding: 0.75rem 1rem;
+    width: 0;
+    min-width: 100%;
+    overflow-x: auto !important;
+    white-space: pre !important;
+    word-wrap: normal !important;
+
+    &::-webkit-scrollbar {
+      height: 6px;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background-color: #d1d5db;
+      border-radius: 3px;
+    }
+
+    &::-webkit-scrollbar-track {
+      background-color: transparent;
+    }
+
+    code {
+      background: none;
+      color: inherit;
+      font-size: 0.875rem;
+      padding: 0;
+      border-radius: 0;
+      font-family: inherit;
+      box-decoration-break: clone;
+    }
+  }
+}
+
+/* 给其他用户的光标加样式 */
+.collaboration-cursor__caret {
+  border-left: 1px solid #0d0d0d;
+  border-right: 1px solid #0d0d0d;
+  margin-left: -1px;
+  margin-right: -1px;
+  pointer-events: none;
+  position: relative;
+  word-break: normal;
+}
+
+/* 光标上方显示名字的小标签 */
+.collaboration-cursor__label {
+  border-radius: 3px 3px 3px 0;
+  color: #0d0d0d;
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 600;
+  left: -1px;
+  line-height: normal;
+  padding: 0.1rem 0.3rem;
+  position: absolute;
+  top: -1.4em;
+  user-select: none;
+  white-space: nowrap;
 }

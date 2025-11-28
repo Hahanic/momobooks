@@ -4,8 +4,8 @@ import mongoose, { Document, Schema } from "mongoose";
 export interface IUser extends Document {
   email: string;
   name: string;
-  avatar_url?: string;
-  password_hash: string;
+  avatar: string;
+  password: string;
   created_at: Date;
 }
 
@@ -13,10 +13,41 @@ const UserSchema: Schema = new Schema(
   {
     email: { type: String, required: true, unique: true, index: true },
     name: { type: String, required: true },
-    avatar_url: { type: String },
-    password_hash: { type: String, select: false }, // select: false 默认查询不返回密码
+    avatar: { type: String },
+    password: { type: String, select: false }, // select: false 默认查询不返回密码
   },
-  { timestamps: { createdAt: "created_at", updatedAt: "updated_at" } },
+  {
+    timestamps: {
+      createdAt: "created_at",
+      updatedAt: "updated_at",
+    },
+    toJSON: {
+      transform: function (_doc, ret) {
+        delete ret.password;
+        // @ts-expect-error internal fields
+        delete ret.__v;
+        // @ts-expect-error internal fields
+        delete ret.created_at;
+        // @ts-expect-error internal fields
+        delete ret.updated_at;
+        return ret;
+      },
+    },
+    toObject: {
+      transform: function (_doc, ret) {
+        delete ret.password;
+        // @ts-expect-error internal fields
+        delete ret.__v;
+        // @ts-expect-error internal fields
+        delete ret.created_at;
+        // @ts-expect-error internal fields
+        delete ret.updated_at;
+        return ret;
+      },
+    },
+  },
 );
 
-export const User = mongoose.model<IUser>("User", UserSchema);
+const User = mongoose.model<IUser>("User", UserSchema);
+
+export default User;

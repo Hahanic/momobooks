@@ -1,26 +1,41 @@
 import { Anchor } from "antd";
 
-import { type AnchorItem } from "../../hooks/useAnchorItems";
+import { PanelLeftClose, PanelLeftOpen } from "lucide-react";
 
-interface DocumentAnchorProps {
-  items: AnchorItem[];
-}
+import { useAnchorItems } from "../../hooks/useAnchorItems";
+import { useLayoutStore } from "../../store/layoutStore";
 
-const DocumentAnchor = ({ items }: DocumentAnchorProps) => {
+const DocumentAnchor = () => {
+  const items = useAnchorItems();
+  const { isAnchorVisible, toggleAnchorVisibility } = useLayoutStore();
   if (items.length === 0) return null;
-
+  console.log("DocumentAnchor render");
   return (
-    <div className="overflow-y-auto">
-      <div className="size-full pr-6">
-        <Anchor
-          className="border-l border-neutral-200 bg-white/60 pr-2 backdrop-blur-md"
-          getContainer={() => document.getElementById("document-scroll-container")!}
-          affix={false}
-          replace
-          items={items}
-        />
+    <>
+      <div
+        className="mb-2 flex size-6 cursor-pointer items-center justify-center rounded-md bg-white hover:bg-neutral-200"
+        onClick={toggleAnchorVisibility}
+      >
+        {isAnchorVisible ? (
+          <PanelLeftClose className="size-4 text-neutral-500" />
+        ) : (
+          <PanelLeftOpen className="size-4 text-neutral-500" />
+        )}
       </div>
-    </div>
+      <div className={`overflow-hidden ${isAnchorVisible ? "opacity-100" : "w-0 opacity-0"}`}>
+        <div className="overflow-y-auto">
+          <div className="size-full pr-6">
+            <Anchor
+              className="border-l border-neutral-200 bg-white/60 pr-2 backdrop-blur-md"
+              getContainer={() => document.getElementById("document-scroll-container")!}
+              affix={false}
+              replace
+              items={items}
+            />
+          </div>
+        </div>
+      </div>
+    </>
   );
 };
 

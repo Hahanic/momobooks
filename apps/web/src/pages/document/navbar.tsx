@@ -27,7 +27,12 @@ import {
 import { useEditorStore } from "../../store/editorStore";
 import { useLayoutStore } from "../../store/layoutStore";
 
-const DocumentNavbar = () => {
+interface DocumentNavbarProps {
+  title?: string;
+  loading?: boolean;
+}
+
+const DocumentNavbar = ({ title, loading }: DocumentNavbarProps) => {
   const { editor } = useEditorStore();
   const { isCollapsed, toggleCollapse } = useLayoutStore();
 
@@ -235,7 +240,7 @@ const DocumentNavbar = () => {
                 }}
                 className="cursor-pointer truncate px-1.5 text-lg font-medium"
               >
-                未命名文档
+                {loading ? "加载中..." : title || "未命名文档"}
               </span>
             )}
             <CloudCheckIcon className="size-4 text-blue-400" />

@@ -26,10 +26,10 @@ const DocumentHistorySchema: Schema = new Schema(
   { timestamps: { createdAt: "created_at", updatedAt: false } },
 ); // 历史记录一旦创建不可修改
 
-export const DocHistory = mongoose.model<IDocumentHistory>(
-  "DocumentHistory",
-  DocumentHistorySchema,
-);
+const DocHistory = mongoose.model<IDocumentHistory>("DocumentHistory", DocumentHistorySchema);
+
+export default DocHistory;
+
 // ```
 
 // ---

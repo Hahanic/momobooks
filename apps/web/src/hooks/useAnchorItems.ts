@@ -12,7 +12,7 @@ export interface AnchorItem {
 export const useAnchorItems = () => {
   const { editor } = useEditorStore();
   const [items, setItems] = useState<AnchorItem[]>([]);
-
+  console.log("useAnchorItems render");
   useEffect(() => {
     if (!editor) return;
 
