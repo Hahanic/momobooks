@@ -16,3 +16,8 @@ export const getDocument = async (id: string): Promise<IDocumentResponse> => {
   const response = await api.get(`/document/${id}`);
   return response.data;
 };
+
+export const getDocuments = async (): Promise<IDocumentResponse[]> => {
+  const response = await api.get("/document");
+  return response.data;
+};

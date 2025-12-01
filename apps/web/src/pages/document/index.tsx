@@ -15,8 +15,6 @@ const DocumentPage = () => {
   const { id } = useParams<{ id: string }>();
   const { document, loading, error } = useDocument();
 
-  console.log("DocumentPage render");
-
   // 大纲
   const leftSidebar = useMemo(() => <DocumentAnchor />, []);
   // 批注
@@ -41,7 +39,7 @@ const DocumentPage = () => {
       {/* 顶部导航区域 */}
       <div className="sticky top-0 z-10 h-auto min-h-12 w-full shrink-0 border-b border-neutral-200 bg-white px-3 print:hidden">
         <Navbar>
-          <DocumentNavbar title={document.title} loading={false} />
+          <DocumentNavbar title={document.title} loading={loading} />
         </Navbar>
         <Toolbar />
       </div>
@@ -68,8 +66,6 @@ const DocumentCanvas = memo(({ leftSidebar, rightSidebar, children }: DocumentCa
 
   const [margins, setMargins] = useState({ left: 0, right: 0 });
 
-  console.log("DocumentCanvas render");
-
   useEffect(() => {
     const updateMargins = () => {
       const containerWidth = containerRef.current?.offsetWidth || 0;
@@ -81,8 +77,8 @@ const DocumentCanvas = memo(({ leftSidebar, rightSidebar, children }: DocumentCa
 
       // 如果屏幕太窄，取消边距，让编辑器居中或占满
       if (containerWidth - left - right <= 320) {
-        newLeft = 0;
-        newRight = 0;
+        newLeft = 24;
+        newRight = 20;
       }
 
       // 性能优化：值比较，防止不必要的重渲染
@@ -106,29 +102,29 @@ const DocumentCanvas = memo(({ leftSidebar, rightSidebar, children }: DocumentCa
   }, []);
 
   return (
-    <Layout
-      id="document-scroll-container"
-      className="relative flex-1 overflow-x-hidden overflow-y-auto bg-neutral-50 print:h-auto print:overflow-visible print:bg-white"
-    >
-      <div ref={containerRef} className="flex size-full print:block print:h-auto">
-        {/* 左侧边栏容器 */}
-        <div ref={leftRef} className="fixed top-24 z-5 max-w-80 sm:top-30 print:hidden">
-          {leftSidebar}
-        </div>
-
-        {/* 中间编辑器容器 */}
-        <div
-          className="flex-1 print:m-0! print:w-full"
-          style={{ marginLeft: margins.left, marginRight: margins.right }}
-        >
-          <div className="mx-auto max-w-205 print:max-w-full">{children}</div>
-        </div>
-
-        {/* 右侧边栏容器 */}
-        <div ref={rightRef} className="fixed top-24 right-5 z-5 print:hidden">
-          {rightSidebar}
-        </div>
+    <div className="relative h-full overflow-hidden print:h-auto">
+      {/* 左侧边栏容器 */}
+      <div ref={leftRef} className="absolute top-4 left-2 z-5 max-w-80 print:hidden">
+        {leftSidebar}
       </div>
-    </Layout>
+      <Layout
+        id="document-scroll-container"
+        className="relative h-full overflow-x-hidden overflow-y-auto bg-neutral-50 print:h-auto print:overflow-visible print:bg-white"
+      >
+        <div ref={containerRef} className="flex size-full print:block print:h-auto">
+          {/* 中间编辑器容器 */}
+          <div
+            className="flex-1 print:m-0! print:w-full"
+            style={{ marginLeft: margins.left, marginRight: margins.right }}
+          >
+            <div className="mx-auto max-w-205 print:max-w-full">{children}</div>
+          </div>
+        </div>
+      </Layout>
+      {/* 右侧边栏容器 */}
+      <div ref={rightRef} className="absolute top-4 right-4 z-5 print:hidden">
+        {rightSidebar}
+      </div>
+    </div>
   );
 });

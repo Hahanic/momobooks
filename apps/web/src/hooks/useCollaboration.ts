@@ -4,12 +4,13 @@ import type { HocuspocusProvider } from "@hocuspocus/provider";
 import * as Y from "yjs";
 
 import { createCollaborationProvider } from "../lib/yjs-provider";
+import { useUserStore } from "../store/userStore";
 
 function useCollaboration(documentId: string) {
+  const { token } = useUserStore();
   const [data, setData] = useState<{ ydoc: Y.Doc; provider: HocuspocusProvider } | null>(null);
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
     if (!token || !documentId) return;
 
     // 设置一个标志位，防止组件卸载后还在设置状态
@@ -21,7 +22,6 @@ function useCollaboration(documentId: string) {
 
     // 只有当组件依然挂载时，才更新状态
     if (isMounted) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setData({ ydoc: doc, provider: newProvider });
     }
 
@@ -33,7 +33,7 @@ function useCollaboration(documentId: string) {
       newProvider.destroy();
       doc.destroy();
     };
-  }, [documentId]);
+  }, [documentId, token]);
 
   return data;
 }

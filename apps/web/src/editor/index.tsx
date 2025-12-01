@@ -10,7 +10,7 @@ interface EditorProps {
   documentId: string;
 }
 
-const EditorWrapper = ({ documentId }: EditorProps) => {
+const Editor = ({ documentId }: EditorProps) => {
   const { user } = useUserStore();
   const collab = useCollaboration(documentId);
 
@@ -26,4 +26,4 @@ const EditorWrapper = ({ documentId }: EditorProps) => {
   return <TiptapEditor ydoc={collab.ydoc!} provider={collab.provider} user={user} />;
 };
 
-export default EditorWrapper;
+export default Editor;

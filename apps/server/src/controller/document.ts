@@ -31,10 +31,38 @@ export const createDocument = async (req: AuthRequest, res: Response) => {
 
     await newDoc.save();
 
-    sendResponse(res, 201, "文档创建成功", newDoc);
+    const docResponse = newDoc.toObject();
+    // @ts-expect-error: __v exists in mongoose document but might not be in type
+    delete docResponse.__v;
+
+    sendResponse(res, 201, "文档创建成功", docResponse);
   } catch (error) {
     console.error("Create document error:", error);
     sendResponse(res, 500, "创建文档失败");
+  }
+};
+
+export const getDocuments = async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = req.user?.userId;
+
+    if (!userId) {
+      return sendResponse(res, 401, "未授权");
+    }
+
+    // 仅获取该用户创建的文档
+    const docs = await Document.find({
+      owner_id: userId,
+      status: { $ne: "trashed" },
+    })
+      .select("-__v")
+      .sort({ updatedAt: -1 })
+      .lean();
+
+    sendResponse(res, 200, "获取成功", docs);
+  } catch (error) {
+    console.error("Get documents error:", error);
+    sendResponse(res, 500, "获取文档失败");
   }
 };
 
@@ -43,12 +71,11 @@ export const getDocument = async (req: AuthRequest, res: Response) => {
     const { id } = req.params;
     const userId = req.user?.userId;
 
-    console.log(672347235234632);
     if (!isValidObjectId(id)) {
       return sendResponse(res, 400, "无效的文档 ID");
     }
 
-    const doc = await Document.findById(id);
+    const doc = await Document.findById(id).select("-__v");
 
     if (!doc) {
       return sendResponse(res, 404, "文档不存在");
@@ -56,9 +83,9 @@ export const getDocument = async (req: AuthRequest, res: Response) => {
 
     // 简单的权限检查
     const isOwner = doc.owner_id.toString() === userId;
-    // const isCollaborator = doc.collaborators.some(c => c.user_id.toString() === userId);
+    const isCollaborator = doc.collaborators.some((c) => c.user_id.toString() === userId);
 
-    if (!isOwner && !doc.is_public) {
+    if (!isOwner && !isCollaborator && !doc.is_public) {
       return sendResponse(res, 403, "无权访问该文档");
     }
 

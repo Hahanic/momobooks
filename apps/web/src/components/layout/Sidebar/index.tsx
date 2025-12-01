@@ -1,15 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
-import { Button, Menu, Tree, type TreeDataNode } from "antd";
+import { Button, Menu } from "antd";
 
 import {
-  CaretDownOutlined,
   ClockCircleOutlined,
-  FileTextOutlined,
-  FolderOpenOutlined,
-  FolderOutlined,
   HomeOutlined,
-  PlusOutlined,
   SearchOutlined,
   StarOutlined,
   TeamOutlined,
@@ -17,6 +12,7 @@ import {
 import { ListCollapseIcon, ListIndentDecreaseIcon } from "lucide-react";
 
 import { useLayoutStore } from "../../../store/layoutStore";
+import DocumentTree from "./DocumentTree";
 
 // 常量定义
 const MIN_WIDTH = 220;
@@ -27,37 +23,6 @@ const staticMenuItems = [
   { key: "recent", icon: <ClockCircleOutlined />, label: "最近使用" },
   { key: "starred", icon: <StarOutlined />, label: "我的收藏" },
   { key: "team", icon: <TeamOutlined />, label: "团队文档" },
-];
-
-const initialTreeData: TreeDataNode[] = [
-  {
-    title: "个人笔记空间",
-    key: "root-1",
-    children: [
-      {
-        title: "前端技术栈",
-        key: "folder-1",
-        children: [
-          { title: "React 19 新特性学习", key: "doc-1-1", isLeaf: true },
-          { title: "Zustand 状态管理", key: "doc-1-2", isLeaf: true },
-        ],
-      },
-      {
-        title: "产品设计灵感",
-        key: "folder-2",
-        children: [{ title: "竞品分析：Notion vs 飞书", key: "doc-2-1", isLeaf: true }],
-      },
-      { title: "本周待办事项", key: "doc-root-1", isLeaf: true },
-    ],
-  },
-  {
-    title: "项目文档 - Momobooks",
-    key: "root-2",
-    children: [
-      { title: "需求规格说明书", key: "doc-3-1", isLeaf: true },
-      { title: "API 接口文档", key: "doc-3-2", isLeaf: true },
-    ],
-  },
 ];
 
 const Sidebar = () => {
@@ -171,64 +136,26 @@ const Sidebar = () => {
               </div>
             </div>
 
-            <Button
+            {/* <Button
               type="primary"
               icon={<PlusOutlined />}
               block
               className="border-none bg-blue-600 shadow-sm hover:bg-blue-500"
             >
               新建文档
-            </Button>
+            </Button> */}
           </div>
 
           {/* 菜单列表区域 */}
-          <div className="flex-1 overflow-x-auto overflow-y-auto py-2">
+          <div className="flex-1 overflow-x-hidden overflow-y-auto py-2">
             <Menu
               mode="inline"
               defaultSelectedKeys={["home"]}
               items={staticMenuItems}
               style={{ backgroundColor: "#F7F7F5", border: "none" }}
             />
-            <div className="px-4 py-1 text-xs font-medium text-gray-400 select-none">我的文档</div>
-            <div className="px-3">
-              <Tree
-                style={{
-                  backgroundColor: "#F7F7F5",
-                  textOverflow: "ellipsis",
-                  whiteSpace: "nowrap",
-                }}
-                blockNode
-                showIcon
-                treeData={initialTreeData}
-                // 自定义展开图标：使用类似 Notion 的小三角
-                switcherIcon={({ expanded }) => (
-                  <CaretDownOutlined
-                    className={`text-xs text-gray-400 transition-transform duration-200 ${
-                      !expanded ? "-rotate-90" : ""
-                    }`}
-                  />
-                )}
-                // 自定义节点图标逻辑
-                icon={(props) => {
-                  if (props.isLeaf) {
-                    return <FileTextOutlined className="text-gray-400" />;
-                  }
-                  return props.expanded ? (
-                    <FolderOpenOutlined className="text-blue-500" />
-                  ) : (
-                    <FolderOutlined className="text-gray-500" />
-                  );
-                }}
-                // 选中事件
-                onSelect={(selectedKeys, info) => {
-                  console.log("Selected:", selectedKeys, info.node.title);
-                  // TODO: 这里执行路由跳转，例如 navigate(`/doc/${info.node.key}`)
-                }}
-                className="bg-transparent text-gray-600"
-                height={500} // 虚拟滚动高度，如果文档很多建议开启
-                virtual={false} // 暂时关闭虚拟滚动，以免样式冲突
-              />
-            </div>
+            <div className="px-4 py-2 text-xs font-medium text-gray-400 select-none">我的文档</div>
+            <DocumentTree />
           </div>
 
           {/* 底部操作区 */}

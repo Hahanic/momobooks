@@ -6,13 +6,17 @@ import { Button, Card, Form, Input, Tabs, message } from "antd";
 import { authService } from "../../services/authService";
 import { useUserStore } from "../../store/userStore";
 
+interface AuthFormValues {
+  email: string;
+  password: string;
+}
+
 const AuthPage = () => {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { login } = useUserStore();
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const onFinish = async (values: any, type: "login" | "register") => {
+  const onFinish = async (values: AuthFormValues, type: "login" | "register") => {
     setLoading(true);
     try {
       const { email, password } = values;
@@ -27,9 +31,8 @@ const AuthPage = () => {
       login(user, token);
       message.success(type === "login" ? "登录成功" : "注册成功");
       navigate("/dashboard");
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (error: any) {
-      message.error(error.response?.data?.message || "操作失败");
+    } catch {
+      message.error("操作失败");
     } finally {
       setLoading(false);
     }

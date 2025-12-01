@@ -30,6 +30,7 @@ export const useLayoutStore = create<LayoutState>()(
       partialize: (state) => ({
         sidebarWidth: state.sidebarWidth,
         isCollapsed: state.isCollapsed,
+        isAnchorVisible: state.isAnchorVisible,
       }),
     },
   ),

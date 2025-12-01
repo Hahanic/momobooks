@@ -55,25 +55,15 @@ export const hocuspocusServer = new Hocuspocus({
     }
 
     try {
-      if (!JWT_SECRET) {
-        console.error("[Hocuspocus] JWT_SECRET is not defined");
-        throw new Error("Server configuration error");
-      }
-
       const decoded = jwt.verify(token, JWT_SECRET) as { userId: string };
       const userId = decoded.userId;
-      console.log(`[Hocuspocus] Authenticating user ${userId} for doc ${data.documentName}`);
-      // 3.2 (可选但推荐) 校验文档权限
-      // documentName 即 doc_id
+      // 3.2 校验文档权限
       const docId = data.documentName;
-      // 注意：这里假设 documentName 是 doc_id (MongoDB ObjectId string)
-      // 如果 documentName 包含其他前缀，需要处理
 
       const doc = await Doc.findById(docId);
 
       if (!doc) throw new Error("Document not found");
 
-      // 简单的权限判断：是 Owner 或者是 Collaborator
       const isOwner = doc.owner_id.toString() === userId;
       const isCollaborator = doc.collaborators.some((c) => c.user_id.toString() === userId);
 
