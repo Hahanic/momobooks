@@ -9,12 +9,10 @@ interface AuthResponse {
 
 export const authService = {
   login: async (email: string, password: string): Promise<AuthResponse> => {
-    const response = await api.post<AuthResponse>("/auth/login", { email, password });
-    return response.data;
+    return await api.post("/auth/login", { email, password });
   },
 
   register: async (email: string, password: string): Promise<AuthResponse> => {
-    const response = await api.post<AuthResponse>("/auth/register", { email, password });
-    return response.data;
+    return await api.post("/auth/register", { email, password });
   },
 };

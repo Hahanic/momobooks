@@ -1,13 +1,16 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
-import { type IUser } from "@momobooks/shared";
+import type { IUser, IUserCredentials } from "@momobooks/shared";
+
+import { authService } from "../services/authService";
 
 interface UserState {
   user: IUser | null;
   token: string | null;
   isAuthenticated: boolean;
-  login: (user: IUser, token: string) => void;
+  login: (credentials: IUserCredentials) => void;
+  register: (credentials: IUserCredentials) => void;
   logout: () => void;
 }
 
@@ -17,9 +20,15 @@ export const useUserStore = create<UserState>()(
       user: null,
       token: null,
       isAuthenticated: false,
-      login: (user, token) => {
-        localStorage.setItem("token", token);
-        set({ user, token, isAuthenticated: true });
+      login: async (credentials: IUserCredentials) => {
+        const response = await authService.login(credentials.email, credentials.password);
+        localStorage.setItem("token", response.data.token);
+        set({ user: response.data, token: response.data.token, isAuthenticated: true });
+      },
+      register: async (credentials: IUserCredentials) => {
+        const response = await authService.register(credentials.email, credentials.password);
+        localStorage.setItem("token", response.data.token);
+        set({ user: response.data, token: response.data.token, isAuthenticated: true });
       },
       logout: () => {
         localStorage.removeItem("token");

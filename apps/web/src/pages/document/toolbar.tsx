@@ -1,7 +1,8 @@
-import { useEffect, useState } from "react";
+import { memo, useState } from "react";
 
 import { ColorPicker, Drawer, Dropdown, Input, Modal } from "antd";
 
+import { Editor } from "@tiptap/react";
 import {
   AlignCenterIcon,
   AlignJustifyIcon,
@@ -31,22 +32,9 @@ import {
   UploadIcon,
 } from "lucide-react";
 
+import { useEditorState } from "../../hooks/useEditorState";
 import { cn } from "../../lib/utils";
 import { useEditorStore } from "../../store/editorStore";
-
-const useToolbarUpdate = () => {
-  const { editor } = useEditorStore();
-  const [, forceUpdate] = useState({});
-
-  useEffect(() => {
-    if (!editor) return;
-    const handler = () => forceUpdate({});
-    editor.on("selectionUpdate", handler);
-    return () => {
-      editor.off("selectionUpdate", handler);
-    };
-  }, [editor]);
-};
 
 interface ToolbarButtonProps {
   onClick?: () => void;
@@ -54,6 +42,55 @@ interface ToolbarButtonProps {
   icon: LucideIcon;
   className?: string;
 }
+interface SmartToolbarButtonProps {
+  action: (editor: Editor) => void;
+  isActive?: (editor: Editor) => boolean;
+  icon: LucideIcon;
+  label?: string;
+}
+
+const SmartToolbarButton = memo(
+  ({ action, isActive, icon: Icon, label }: SmartToolbarButtonProps) => {
+    const { editor } = useEditorStore();
+
+    const active = useEditorState((editor) => (isActive ? isActive(editor) : false));
+
+    const handleClick = () => {
+      if (editor) {
+        action(editor);
+      }
+    };
+
+    return (
+      <button
+        onClick={handleClick}
+        className={cn(
+          "flex h-7 min-w-7 items-center justify-center rounded-sm text-sm hover:bg-neutral-200/80",
+          active && "bg-neutral-200/80",
+        )}
+        title={label}
+      >
+        <Icon className="size-4" />
+      </button>
+    );
+  },
+);
+
+// 单个工具栏按钮组件
+const ToolbarButton = ({ onClick, isActive, icon: Icon, className }: ToolbarButtonProps) => {
+  return (
+    <button
+      onClick={onClick}
+      className={cn(
+        "flex h-7 min-w-7 items-center justify-center rounded-sm text-sm hover:bg-neutral-200/80",
+        isActive && "bg-neutral-200/80",
+        className,
+      )}
+    >
+      <Icon className="size-4" />
+    </button>
+  );
+};
 
 const headings = [
   { label: "Normal", value: 0, fontSize: "16px" },
@@ -67,15 +104,16 @@ const headings = [
 // 标题级别按钮组件
 const HeadingLevelButton = () => {
   const { editor } = useEditorStore();
-  useToolbarUpdate();
-  const getCurrentHeading = (): string => {
+  const currentLevel = useEditorState((editor) => {
     for (let level = 1; level <= 5; level++) {
-      if (editor?.isActive("heading", { level })) {
-        return `Heading ${level}`;
+      if (editor.isActive("heading", { level })) {
+        return level;
       }
     }
-    return "Normal";
-  };
+    return 0;
+  });
+
+  const currentLabel = headings.find((h) => h.value === currentLevel)?.label || "Normal";
 
   return (
     <Dropdown
@@ -96,20 +134,12 @@ const HeadingLevelButton = () => {
           },
         })),
         selectable: true,
-        selectedKeys: [
-          String(
-            headings.find((h) =>
-              h.value === 0
-                ? !editor?.isActive("heading")
-                : editor?.isActive("heading", { level: h.value }),
-            )?.value || "0",
-          ),
-        ],
+        selectedKeys: [String(currentLevel)],
       }}
       trigger={["click"]}
     >
       <button className="flex h-7 w-[100px] shrink-0 items-center justify-between overflow-hidden rounded-sm px-1.5 text-sm hover:bg-neutral-200/80">
-        <span className="truncate">{getCurrentHeading()}</span>
+        <span className="truncate">{currentLabel}</span>
         <span className="ml-2 text-xs opacity-50">▼</span>
       </button>
     </Dropdown>
@@ -128,7 +158,11 @@ const fonts = [
 // 字体选择下拉菜单组件
 const FontFamilyButtons = () => {
   const { editor } = useEditorStore();
-  useToolbarUpdate();
+
+  const currentFont = useEditorState((editor) => editor.getAttributes("textStyle").fontFamily);
+
+  // 优先显示匹配的标签，否则显示字体名，最后兜底 Arial
+  const currentLabel = fonts.find((f) => f.value === currentFont)?.label || currentFont || "Arial";
 
   return (
     <Dropdown
@@ -143,14 +177,12 @@ const FontFamilyButtons = () => {
           onClick: () => editor?.chain().focus().setFontFamily(font.value).run(),
         })),
         selectable: true,
-        selectedKeys: fonts
-          .filter((font) => editor?.isActive("textStyle", { fontFamily: font.value }))
-          .map((f) => f.value),
+        selectedKeys: currentFont ? [currentFont] : [],
       }}
       trigger={["click"]}
     >
       <button className="flex h-7 w-[100px] shrink-0 items-center justify-between overflow-hidden rounded-sm px-1.5 text-sm hover:bg-neutral-200/80">
-        <span className="truncate">{editor?.getAttributes("textStyle").fontFamily || "Arial"}</span>
+        <span className="truncate">{currentLabel}</span>
         <span className="ml-2 text-xs opacity-50">▼</span>
       </button>
     </Dropdown>
@@ -160,11 +192,14 @@ const FontFamilyButtons = () => {
 // 字体大小按钮组件
 const FontSizeButton = () => {
   const { editor } = useEditorStore();
-  useToolbarUpdate();
 
-  const currentFontSize = editor?.getAttributes("textStyle").fontSize || "16px";
+  const currentFontSize = useEditorState(
+    (editor) => editor.getAttributes("textStyle").fontSize || "16px",
+  );
 
-  const [inputValue, setInputValue] = useState(currentFontSize.replace("px", ""));
+  const safeFontSize = currentFontSize || "16px";
+
+  const [inputValue, setInputValue] = useState(safeFontSize.replace("px", ""));
   const [isEditing, setIsEditing] = useState(false);
 
   const updateFontSize = (newSize: string) => {
@@ -178,7 +213,7 @@ const FontSizeButton = () => {
       setInputValue(size.toString());
       setIsEditing(false);
     } else {
-      setInputValue(currentFontSize.replace("px", ""));
+      setInputValue(safeFontSize.replace("px", ""));
       setIsEditing(false);
     }
   };
@@ -200,12 +235,12 @@ const FontSizeButton = () => {
   };
 
   const increment = () => {
-    const size = parseInt(currentFontSize.replace("px", ""));
+    const size = parseInt(safeFontSize.replace("px", ""));
     updateFontSize((size + 1).toString());
   };
 
   const decrement = () => {
-    const size = parseInt(currentFontSize.replace("px", ""));
+    const size = parseInt(safeFontSize.replace("px", ""));
     if (size > 1) {
       updateFontSize((size - 1).toString());
     }
@@ -234,11 +269,11 @@ const FontSizeButton = () => {
           className="h-7 w-10 truncate rounded-sm border border-neutral-300 text-center text-sm hover:bg-neutral-200/80"
           onClick={() => {
             setIsEditing(true);
-            setInputValue(currentFontSize.replace("px", ""));
+            setInputValue(safeFontSize.replace("px", ""));
           }}
           title="字体大小"
         >
-          {currentFontSize.replace("px", "")}
+          {safeFontSize.replace("px", "")}
         </button>
       )}
       <button
@@ -254,9 +289,8 @@ const FontSizeButton = () => {
 // 文本颜色按钮组件
 const TextColorButton = () => {
   const { editor } = useEditorStore();
-  useToolbarUpdate();
-
-  const value = editor?.getAttributes("textStyle").color || "#000000";
+  const value = useEditorState((editor) => editor.getAttributes("textStyle").color || "#000000");
+  const safeValue = value || "#000000";
 
   const onChange = (color: { toHexString: () => string }) => {
     editor?.chain().focus().setColor(color.toHexString()).run();
@@ -264,7 +298,7 @@ const TextColorButton = () => {
 
   return (
     <ColorPicker
-      value={value}
+      value={safeValue}
       onChange={onChange}
       presets={[
         {
@@ -293,7 +327,7 @@ const TextColorButton = () => {
         <span className="-translate-y-px font-medium">A</span>
         <div
           className="h-0.5 w-4 -translate-y-[3px] rounded-sm"
-          style={{ backgroundColor: value }}
+          style={{ backgroundColor: safeValue }}
         />
       </button>
     </ColorPicker>
@@ -311,7 +345,9 @@ const lineHeights = [
 // 行高按钮组件
 const LineHeightButton = () => {
   const { editor } = useEditorStore();
-  useToolbarUpdate();
+
+  const value = useEditorState((editor) => editor.getAttributes("textStyle").lineHeight);
+  const safeValue = value || "normal";
 
   return (
     <Dropdown
@@ -322,7 +358,7 @@ const LineHeightButton = () => {
           onClick: () => editor?.chain().focus().setLineHeight(item.value).run(),
         })),
         selectable: true,
-        selectedKeys: [editor?.getAttributes("textStyle").lineHeight || "normal"],
+        selectedKeys: [safeValue],
       }}
       trigger={["click"]}
     >
@@ -362,8 +398,11 @@ const alignments = [
 // 对齐方式按钮组件
 const AlignButton = () => {
   const { editor } = useEditorStore();
-  useToolbarUpdate();
 
+  const value = useEditorState((editor) => {
+    return alignments.find((a) => editor.isActive({ textAlign: a.value }))?.value || "left";
+  });
+  const currentAlignment = alignments.find((a) => a.value === value) || alignments[0];
   return (
     <Dropdown
       menu={{
@@ -378,9 +417,7 @@ const AlignButton = () => {
           onClick: () => editor?.chain().focus().setTextAlign(item.value).run(),
         })),
         selectable: true,
-        selectedKeys: [
-          alignments.find((a) => editor?.isActive({ textAlign: a.value }))?.value || "left",
-        ],
+        selectedKeys: [currentAlignment.value],
       }}
       trigger={["click"]}
     >
@@ -397,19 +434,25 @@ const AlignButton = () => {
 // 列表按钮组件
 const ListButton = () => {
   const { editor } = useEditorStore();
-  useToolbarUpdate();
+
+  const activeLists = useEditorState((editor) => {
+    const active = [];
+    if (editor.isActive("bulletList")) active.push("Bullet List");
+    if (editor.isActive("orderedList")) active.push("Ordered List");
+    return active;
+  });
+
+  const safeActiveLists = activeLists || [];
 
   const lists = [
     {
       label: "Bullet List",
       icon: ListIcon,
-      isActive: editor?.isActive("bulletList") || false,
       onClick: () => editor?.chain().focus().toggleBulletList().run(),
     },
     {
       label: "Ordered List",
       icon: ListOrderedIcon,
-      isActive: editor?.isActive("orderedList") || false,
       onClick: () => editor?.chain().focus().toggleOrderedList().run(),
     },
   ];
@@ -428,7 +471,7 @@ const ListButton = () => {
           onClick: item.onClick,
         })),
         selectable: true,
-        selectedKeys: lists.filter((item) => item.isActive).map((item) => item.label),
+        selectedKeys: safeActiveLists,
       }}
       trigger={["click"]}
     >
@@ -522,7 +565,7 @@ const ImageButton = () => {
 // 链接按钮组件
 const LinkButton = () => {
   const { editor } = useEditorStore();
-  useToolbarUpdate();
+  const isActive = useEditorState((editor) => editor.isActive("link"));
   const [value, setValue] = useState("");
   const [isOpen, setIsOpen] = useState(false);
 
@@ -547,14 +590,14 @@ const LinkButton = () => {
         onClick={openModal}
         className={cn(
           "flex h-7 min-w-7 shrink-0 items-center justify-center rounded-sm px-1.5 text-sm hover:bg-neutral-200/80",
-          editor?.isActive("link") && "bg-neutral-200/80",
+          isActive && "bg-neutral-200/80",
         )}
         title="插入链接"
       >
         <Link2Icon className="size-4" />
       </button>
       <Modal
-        title={editor?.isActive("link") ? "编辑链接" : "插入链接"}
+        title={isActive ? "编辑链接" : "插入链接"}
         open={isOpen}
         onOk={handleOk}
         onCancel={() => setIsOpen(false)}
@@ -566,22 +609,6 @@ const LinkButton = () => {
         />
       </Modal>
     </>
-  );
-};
-
-// 单个工具栏按钮组件
-const ToolbarButton = ({ onClick, isActive, icon: Icon, className }: ToolbarButtonProps) => {
-  return (
-    <button
-      onClick={onClick}
-      className={cn(
-        "flex h-7 min-w-7 items-center justify-center rounded-sm text-sm hover:bg-neutral-200/80",
-        isActive && "bg-neutral-200/80",
-        className,
-      )}
-    >
-      <Icon className="size-4" />
-    </button>
   );
 };
 
@@ -616,67 +643,68 @@ const TypographyGroup = () => {
 };
 
 const FormatGroup = () => {
-  const { editor } = useEditorStore();
-  useToolbarUpdate();
   return (
     <div className="flex items-center gap-x-0.5">
-      <ToolbarButton
-        onClick={() => editor?.chain().focus().toggleBold().run()}
-        isActive={editor?.isActive("bold")}
+      <SmartToolbarButton
         icon={BoldIcon}
+        label="Bold"
+        action={(editor) => editor.chain().focus().toggleBold().run()}
+        isActive={(editor) => editor.isActive("bold")}
       />
-      <ToolbarButton
-        onClick={() => editor?.chain().focus().toggleItalic().run()}
-        isActive={editor?.isActive("italic")}
+      <SmartToolbarButton
         icon={ItalicIcon}
+        label="Italic"
+        action={(editor) => editor.chain().focus().toggleItalic().run()}
+        isActive={(editor) => editor.isActive("italic")}
       />
-      <ToolbarButton
-        onClick={() => editor?.chain().focus().toggleUnderline().run()}
-        isActive={editor?.isActive("underline")}
+      <SmartToolbarButton
         icon={UnderlineIcon}
+        label="Underline"
+        action={(editor) => editor.chain().focus().toggleUnderline().run()}
+        isActive={(editor) => editor.isActive("underline")}
       />
-      <ToolbarButton
-        onClick={() => editor?.chain().focus().toggleStrike().run()}
-        isActive={editor?.isActive("strike")}
+      <SmartToolbarButton
         icon={StrikethroughIcon}
+        label="Strike"
+        action={(editor) => editor.chain().focus().toggleStrike().run()}
+        isActive={(editor) => editor.isActive("strike")}
       />
       <TextColorButton />
-      <ToolbarButton
-        onClick={() => editor?.chain().focus().clearNodes().unsetAllMarks().run()}
+      <SmartToolbarButton
         icon={RemoveFormattingIcon}
+        label="Clear Formatting"
+        action={(editor) => editor.chain().focus().clearNodes().unsetAllMarks().run()}
       />
     </div>
   );
 };
 
 const ParagraphGroup = () => {
-  const { editor } = useEditorStore();
-  useToolbarUpdate();
   return (
     <div className="flex items-center gap-x-0.5">
       <LineHeightButton />
       <AlignButton />
       <ListButton />
-      <ToolbarButton
-        onClick={() => editor?.chain().focus().toggleTaskList().run()}
-        isActive={editor?.isActive("taskList")}
+      <SmartToolbarButton
         icon={ListTodoIcon}
+        label="Task List"
+        action={(editor) => editor.chain().focus().toggleTaskList().run()}
+        isActive={(editor) => editor.isActive("taskList")}
       />
     </div>
   );
 };
 
 const InsertGroup = () => {
-  const { editor } = useEditorStore();
-  useToolbarUpdate();
   return (
     <div className="flex items-center gap-x-0.5">
       <ImageButton />
       <LinkButton />
-      <ToolbarButton
-        onClick={() => console.log("Add Comment")}
-        isActive={editor?.isActive("pendingComment")}
+      <SmartToolbarButton
+        action={() => console.log("Add Comment")}
+        isActive={(editor) => editor.isActive("pendingComment")}
         icon={MessageSquarePlusIcon}
+        label="Add Comment"
       />
     </div>
   );
@@ -685,7 +713,6 @@ const InsertGroup = () => {
 const Toolbar = () => {
   const { editor } = useEditorStore();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-
   return (
     <>
       {/* Desktop Toolbar */}
@@ -707,10 +734,11 @@ const Toolbar = () => {
           <ToolbarButton onClick={() => editor?.chain().focus().undo().run()} icon={Undo2Icon} />
           <ToolbarButton onClick={() => editor?.chain().focus().redo().run()} icon={Redo2Icon} />
           <div className="h-4 w-px bg-neutral-300" />
-          <ToolbarButton
-            onClick={() => editor?.chain().focus().toggleBold().run()}
-            isActive={editor?.isActive("bold")}
+          <SmartToolbarButton
             icon={BoldIcon}
+            label="Bold"
+            action={(editor) => editor.chain().focus().toggleBold().run()}
+            isActive={(editor) => editor.isActive("bold")}
           />
           <TextColorButton />
           <ImageButton />

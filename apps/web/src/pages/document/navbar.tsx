@@ -1,6 +1,6 @@
 import { Avatar, Button, Dropdown, Flex, type MenuProps, Tooltip } from "antd";
 
-import { PlusOutlined, SearchOutlined } from "@ant-design/icons";
+import { MenuUnfoldOutlined, PlusOutlined, SearchOutlined } from "@ant-design/icons";
 import {
   BoldIcon,
   CloudCheckIcon,
@@ -10,8 +10,6 @@ import {
   FilePlusIcon,
   GlobeIcon,
   ItalicIcon,
-  ListIndentDecreaseIcon,
-  ListIndentIncrease,
   PrinterIcon,
   Redo2Icon,
   RemoveFormattingIcon,
@@ -218,7 +216,7 @@ const DocumentNavbar = ({ title, loading }: DocumentNavbarProps) => {
         ) : (
           <div className="opacity-50 transition-opacity hover:opacity-80">
             <Button
-              icon={isCollapsed ? <ListIndentIncrease /> : <ListIndentDecreaseIcon />}
+              icon={<MenuUnfoldOutlined />}
               onClick={toggleCollapse}
               type="text"
               className="hover:bg-gray-80 text-gray-400"

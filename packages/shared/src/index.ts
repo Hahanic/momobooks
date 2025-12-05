@@ -1,8 +1,17 @@
 // 类型定义和共享逻辑
+export interface IUserCredentials {
+  email: string;
+  password: string;
+}
+
 export interface IUser {
   _id: string;
   name: string;
   email: string;
+}
+
+export interface IAuthResponse extends IUser {
+  token: string;
 }
 
 export interface IDocumentResponse {

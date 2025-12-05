@@ -51,10 +51,16 @@ export const useAnchorItems = () => {
           }
         }
       });
-      setItems(rootItems);
+
+      // 如果 Anchor 内容没有变化，则不更新状态，避免不必要的渲染
+      setItems((prev) => {
+        if (JSON.stringify(prev) === JSON.stringify(rootItems)) {
+          return prev;
+        }
+        return rootItems;
+      });
     };
 
-    // Initial update
     updateHeadings();
 
     let timeoutId: ReturnType<typeof setTimeout>;
@@ -63,7 +69,6 @@ export const useAnchorItems = () => {
       timeoutId = setTimeout(updateHeadings, 500);
     };
 
-    // Listen for updates
     editor.on("update", debouncedUpdate);
 
     return () => {

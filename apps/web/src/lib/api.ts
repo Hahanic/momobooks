@@ -1,5 +1,7 @@
 import axios, { type AxiosInstance, type InternalAxiosRequestConfig } from "axios";
 
+import { useUserStore } from "../store/userStore";
+
 const api: AxiosInstance = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL,
   timeout: 60000,
@@ -32,6 +34,7 @@ api.interceptors.response.use(
   async (error) => {
     // 原始请求配置
     // const originalRequest = error.config;
+    const { logout } = useUserStore.getState();
 
     let userFriendlyMessage = "操作失败，请稍后重试";
     console.error("Response Error:", error);
@@ -42,6 +45,7 @@ api.interceptors.response.use(
       switch (status) {
         case 401:
           // 未授权
+          logout();
           userFriendlyMessage = data.message || "未授权，请重新登录";
           console.error("401: 未授权，请重新登录");
           break;

@@ -104,7 +104,7 @@ const DocumentCanvas = memo(({ leftSidebar, rightSidebar, children }: DocumentCa
   return (
     <div className="relative h-full overflow-hidden print:h-auto">
       {/* 左侧边栏容器 */}
-      <div ref={leftRef} className="absolute top-4 left-2 z-5 max-w-80 print:hidden">
+      <div ref={leftRef} className="absolute left-2 z-5 h-full max-w-80 print:hidden">
         {leftSidebar}
       </div>
       <Layout

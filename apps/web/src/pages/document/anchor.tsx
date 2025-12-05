@@ -10,7 +10,6 @@ import { useLayoutStore } from "../../store/layoutStore";
 const AnchorList = memo(({ items }: { items: AnchorProps["items"] }) => {
   return (
     <Anchor
-      className="border-l border-neutral-200 bg-white/60 pr-2 backdrop-blur-md"
       getContainer={() => document.getElementById("document-scroll-container")!}
       affix={false}
       replace
@@ -18,14 +17,15 @@ const AnchorList = memo(({ items }: { items: AnchorProps["items"] }) => {
     />
   );
 });
+
 const DocumentAnchor = () => {
   const items = useAnchorItems();
   const { isAnchorVisible, toggleAnchorVisibility } = useLayoutStore();
   if (items.length === 0) return null;
   return (
-    <>
+    <div className="flex size-full flex-col">
       <div
-        className="mb-2 flex size-6 cursor-pointer items-center justify-center rounded-md bg-white hover:bg-neutral-200"
+        className="flex size-6 cursor-pointer items-center justify-center rounded-md bg-white hover:bg-neutral-200"
         onClick={toggleAnchorVisibility}
       >
         {isAnchorVisible ? (
@@ -34,14 +34,12 @@ const DocumentAnchor = () => {
           <PanelLeftOpen className="size-4 text-neutral-500" />
         )}
       </div>
-      <div className={`overflow-hidden ${isAnchorVisible ? "opacity-100" : "h-0 w-0 opacity-0"}`}>
-        <div className="overflow-y-auto">
-          <div className="size-full pr-6">
-            <AnchorList items={items} />
-          </div>
-        </div>
+      <div
+        className={`custom-scrollbar mt-4 flex-1 overflow-y-auto bg-white/60 backdrop-blur-md ${isAnchorVisible ? "opacity-100" : "h-0 w-0 opacity-0"}`}
+      >
+        <AnchorList items={items} />
       </div>
-    </>
+    </div>
   );
 };
 

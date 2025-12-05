@@ -66,8 +66,9 @@ export const hocuspocusServer = new Hocuspocus({
 
       const isOwner = doc.owner_id.toString() === userId;
       const isCollaborator = doc.collaborators.some((c) => c.user_id.toString() === userId);
+      const isPublic = doc.is_public;
 
-      if (!isOwner && !isCollaborator) {
+      if (!isOwner && !isCollaborator && !isPublic) {
         throw new Error("Forbidden: You do not have access to this document");
       }
 

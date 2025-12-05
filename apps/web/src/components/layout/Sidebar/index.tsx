@@ -5,13 +5,14 @@ import { Button, Menu } from "antd";
 import {
   ClockCircleOutlined,
   HomeOutlined,
+  MenuFoldOutlined,
   SearchOutlined,
   StarOutlined,
   TeamOutlined,
 } from "@ant-design/icons";
-import { ListCollapseIcon, ListIndentDecreaseIcon } from "lucide-react";
 
 import { useLayoutStore } from "../../../store/layoutStore";
+import { MomoIcon } from "../../common/MomoIcon";
 import DocumentTree from "./DocumentTree";
 
 // 常量定义
@@ -104,50 +105,44 @@ const Sidebar = () => {
   return (
     <div className="fixed z-20 h-full shrink-0 sm:static">
       <aside
-        className="group relative h-full shrink-0 bg-[#F7F7F5]"
+        className="relative h-full shrink-0 bg-[#F7F7F5]"
         style={{
           width: isCollapsed ? 0 : `${localWidth}px`,
           overflow: "hidden",
         }}
       >
         {/* 侧边栏内容容器 */}
-        <div className="flex h-full flex-col overflow-hidden">
+        <div className="flex size-full flex-col overflow-hidden">
           {/* 顶部 Logo / 切换区 */}
           <div className="flex h-16 items-center px-3 py-4">
             {/* 收起按钮 */}
             <div className="opacity-50 transition-opacity hover:opacity-80">
               <Button
-                icon={isCollapsed ? <ListCollapseIcon /> : <ListIndentDecreaseIcon />}
+                icon={<MenuFoldOutlined />}
                 onClick={toggleCollapse}
                 type="text"
                 className="hover:bg-gray-80 text-gray-400"
               />
             </div>
-            <div className="ml-2 text-center text-lg text-gray-700">📚 Momobooks</div>
+            <div className="ml-2 flex items-center gap-2 text-lg text-gray-700">
+              <MomoIcon className="text-[#d4237a]" style={{ fontSize: "18px" }} />
+              <span>momo</span>
+            </div>
           </div>
 
           {/* 搜索与新建 */}
           <div className="mb-2 space-y-2 px-3">
-            <div className="group/search relative cursor-pointer">
+            <div className="relative cursor-pointer">
               <div className="flex items-center gap-2 rounded-md border border-gray-200 bg-white px-3 py-1.5 text-sm text-gray-500 transition-colors hover:bg-gray-50">
                 <SearchOutlined />
                 <span>搜索</span>
                 <span className="ml-auto text-xs text-gray-300">⌘K</span>
               </div>
             </div>
-
-            {/* <Button
-              type="primary"
-              icon={<PlusOutlined />}
-              block
-              className="border-none bg-blue-600 shadow-sm hover:bg-blue-500"
-            >
-              新建文档
-            </Button> */}
           </div>
 
           {/* 菜单列表区域 */}
-          <div className="flex-1 overflow-x-hidden overflow-y-auto py-2">
+          <div className="custom-scrollbar w-full flex-1 overflow-x-hidden overflow-y-auto py-2">
             <Menu
               mode="inline"
               defaultSelectedKeys={["home"]}
@@ -165,7 +160,7 @@ const Sidebar = () => {
         {/* 拽条 */}
         <div
           onMouseDown={handleMouseDown}
-          className="group/resizer absolute top-0 right-[-7px] z-10 hidden h-full w-4 cursor-col-resize justify-center transition-all hover:right-[-7px] sm:flex"
+          className="absolute top-0 right-[-7px] z-10 hidden h-full w-4 cursor-col-resize justify-center transition-all hover:right-[-7px] sm:flex"
         >
           {/* 视觉线：平时是边框颜色，hover 或拖拽时变蓝 */}
           <div
