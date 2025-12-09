@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 
-import { Button, Menu } from "antd";
+import { Button } from "antd";
 
 import {
-  ClockCircleOutlined,
   HomeOutlined,
   MenuFoldOutlined,
   SearchOutlined,
@@ -20,11 +20,48 @@ const MIN_WIDTH = 220;
 const MAX_WIDTH = 600;
 
 const staticMenuItems = [
-  { key: "home", icon: <HomeOutlined />, label: "工作台" },
-  { key: "recent", icon: <ClockCircleOutlined />, label: "最近使用" },
+  { key: "home", icon: <HomeOutlined />, label: "主页" },
   { key: "starred", icon: <StarOutlined />, label: "我的收藏" },
   { key: "team", icon: <TeamOutlined />, label: "团队文档" },
 ];
+
+const SidebarNavItem = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  return (
+    <div className="mb-2 w-full px-2">
+      {staticMenuItems.map((item) => {
+        const isActive =
+          (item.key === "home" && location.pathname === "/home") ||
+          (item.key !== "home" && location.pathname.startsWith(`/${item.key}`));
+
+        return (
+          <div
+            key={item.key}
+            onClick={() => {
+              if (item.key === "home") navigate("/home");
+              // if (item.key === "starred") navigate("/starred");
+              // if (item.key === "team") navigate("/team");
+            }}
+            className={`group flex cursor-pointer items-center gap-2 rounded-sm px-3 py-1 text-sm text-gray-600 transition-colors ${
+              isActive ? "bg-gray-200/60" : "hover:bg-gray-200/40"
+            }`}
+          >
+            <span
+              className={`flex size-5 items-center justify-center ${
+                isActive ? "text-gray-700" : "text-gray-500"
+              }`}
+            >
+              {item.icon}
+            </span>
+            <span className="flex-1 truncate">{item.label}</span>
+          </div>
+        );
+      })}
+    </div>
+  );
+};
 
 const Sidebar = () => {
   const {
@@ -141,14 +178,11 @@ const Sidebar = () => {
             </div>
           </div>
 
-          {/* 菜单列表区域 */}
           <div className="custom-scrollbar w-full flex-1 overflow-x-hidden overflow-y-auto py-2">
-            <Menu
-              mode="inline"
-              defaultSelectedKeys={["home"]}
-              items={staticMenuItems}
-              style={{ backgroundColor: "#F7F7F5", border: "none" }}
-            />
+            {/* 菜单列表区域 */}
+            <SidebarNavItem />
+
+            {/* 文档树区域 */}
             <div className="px-4 py-2 text-xs font-medium text-gray-400 select-none">我的文档</div>
             <DocumentTree />
           </div>

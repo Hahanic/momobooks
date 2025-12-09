@@ -1,34 +1,19 @@
 import { memo, useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
-import { Dropdown, type MenuProps, Skeleton, Tree, type TreeDataNode } from "antd";
+import { App, Skeleton, Tree, type TreeDataNode } from "antd";
 
-import {
-  BookTextIcon,
-  CopyIcon,
-  ExternalLinkIcon,
-  FileSymlinkIcon,
-  FolderInputIcon,
-  LinkIcon,
-  MoreHorizontalIcon,
-  PencilIcon,
-  PinOffIcon,
-  PlusIcon,
-  Share2Icon,
-  StarIcon,
-  Trash2Icon,
-  UserCogIcon,
-} from "lucide-react";
-import useSWR from "swr";
+import { BookTextIcon, PlusIcon } from "lucide-react";
+import useSWR, { useSWRConfig } from "swr";
 
 import { type IDocumentResponse } from "@momobooks/shared";
 
-import { getDocuments } from "../../../services/documentService";
+import { createDocument, getDocuments } from "../../../services/documentService";
+import { DocumentActions } from "../../document/DocumentActions";
 
 // 定义回调函数的类型
 type TreeActionHandlers = {
   onCreate: (parentId: string) => void;
-  onMenuClick: (key: string, doc: IDocumentResponse) => void;
 };
 
 const buildTree = (items: IDocumentResponse[], handlers: TreeActionHandlers): TreeDataNode[] => {
@@ -37,72 +22,6 @@ const buildTree = (items: IDocumentResponse[], handlers: TreeActionHandlers): Tr
 
   // Create nodes
   items.forEach((item) => {
-    // 定义下拉菜单项
-    const menuItems: MenuProps["items"] = [
-      {
-        key: "open_new_tab",
-        label: "在新标签页打开",
-        icon: <ExternalLinkIcon size={14} />,
-      },
-      {
-        key: "share",
-        label: "分享",
-        icon: <Share2Icon size={14} />,
-      },
-      {
-        key: "copy_link",
-        label: "复制链接",
-        icon: <LinkIcon size={14} />,
-      },
-      {
-        type: "divider",
-      },
-      {
-        key: "duplicate",
-        label: "创建副本",
-        icon: <CopyIcon size={14} />,
-      },
-      {
-        key: "move_to",
-        label: "移动到",
-        icon: <FolderInputIcon size={14} />,
-      },
-      {
-        key: "add_shortcut",
-        label: "添加快捷方式到",
-        icon: <FileSymlinkIcon size={14} />,
-      },
-      {
-        key: "remove_pin",
-        label: "从“置顶”移除",
-        icon: <PinOffIcon size={14} />,
-      },
-      {
-        key: "favorite",
-        label: "收藏",
-        icon: <StarIcon size={14} />,
-      },
-      {
-        type: "divider",
-      },
-      {
-        key: "transfer",
-        label: "转移所有权",
-        icon: <UserCogIcon size={14} />,
-      },
-      {
-        key: "rename",
-        label: "重命名",
-        icon: <PencilIcon size={14} />,
-      },
-      {
-        key: "delete",
-        label: "删除",
-        danger: true,
-        icon: <Trash2Icon size={14} />,
-      },
-    ];
-
     map.set(item._id, {
       key: item._id,
       // title 是整个节点内容的渲染区域
@@ -129,26 +48,7 @@ const buildTree = (items: IDocumentResponse[], handlers: TreeActionHandlers): Tr
             </div>
 
             {/* 按钮 2: 更多菜单 */}
-            <Dropdown
-              menu={{
-                items: menuItems,
-                onClick: ({ key, domEvent }) => {
-                  domEvent.stopPropagation();
-                  handlers.onMenuClick(key, item);
-                },
-              }}
-              trigger={["click"]}
-            >
-              <div
-                role="button"
-                className="flex items-center justify-center rounded p-0.5 text-gray-400 hover:bg-gray-200 hover:text-gray-700"
-                onClick={(e) => {
-                  e.stopPropagation();
-                }}
-              >
-                <MoreHorizontalIcon size={16} />
-              </div>
-            </Dropdown>
+            <DocumentActions document={item} />
           </div>
         </div>
       ),
@@ -175,6 +75,8 @@ const buildTree = (items: IDocumentResponse[], handlers: TreeActionHandlers): Tr
 const DocumentTree = memo(() => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { mutate } = useSWRConfig();
+  const { message } = App.useApp();
 
   // 0. 获取文档列表数据
   const {
@@ -226,27 +128,24 @@ const DocumentTree = memo(() => {
   // 定义动作处理逻辑
   const handlers: TreeActionHandlers = useMemo(
     () => ({
-      onCreate: (parentId) => {
-        console.log("Create new doc under:", parentId);
-        // 这里调用你的创建接口，例如: createDocument({ parentId })
-      },
-      onMenuClick: (key, doc) => {
-        console.log(`Action: ${key} on doc: ${doc.title}`);
-        switch (key) {
-          case "open_new_tab":
-            window.open(`/document/${doc._id}`, "_blank");
-            break;
-          case "rename":
-            // 触发重命名逻辑
-            break;
-          case "delete":
-            // 触发删除逻辑
-            break;
-          // ... 处理其他 case
+      onCreate: async (parentId) => {
+        try {
+          const newDoc = await createDocument({
+            title: "无标题",
+            parent_id: parentId,
+          });
+          message.success("创建成功");
+          mutate("/document");
+          // 自动展开父节点
+          setExpandedKeys((prev) => [...prev, parentId]);
+          navigate(`/document/${newDoc._id}`);
+        } catch (error) {
+          console.error(error);
+          message.error("创建失败");
         }
       },
     }),
-    [],
+    [mutate, navigate, message],
   );
 
   // 3. 构建 TreeData

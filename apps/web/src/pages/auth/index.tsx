@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-import { Button, Card, Form, Input, Tabs, message } from "antd";
+import { App, Button, Card, Form, Input, Tabs } from "antd";
 
 import { useUserStore } from "../../store/userStore";
 
@@ -11,7 +11,7 @@ interface AuthFormValues {
 }
 
 const AuthPage = () => {
-  const [messageApi, contextHolder] = message.useMessage();
+  const { message } = App.useApp();
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { login, register } = useUserStore();
@@ -26,11 +26,11 @@ const AuthPage = () => {
         await register({ email, password });
       }
 
-      messageApi.success(type === "login" ? "登录成功" : "注册成功");
-      navigate("/dashboard");
+      message.success(type === "login" ? "登录成功" : "注册成功");
+      navigate("/");
       console.log(`${type} successful`);
     } catch {
-      messageApi.error("操作失败");
+      message.error("操作失败");
     } finally {
       setLoading(false);
     }
@@ -38,7 +38,6 @@ const AuthPage = () => {
 
   return (
     <div className="flex h-screen items-center justify-center bg-gray-50">
-      {contextHolder}
       <Card className="w-96 shadow-lg">
         <Tabs
           defaultActiveKey="login"

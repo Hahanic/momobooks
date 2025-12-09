@@ -1,6 +1,6 @@
-import { Avatar, Button, Dropdown, Flex, type MenuProps, Tooltip } from "antd";
+import { Button, Dropdown, Flex, type MenuProps, Tooltip } from "antd";
 
-import { MenuUnfoldOutlined, PlusOutlined, SearchOutlined } from "@ant-design/icons";
+import { PlusOutlined, SearchOutlined } from "@ant-design/icons";
 import {
   BoldIcon,
   CloudCheckIcon,
@@ -23,7 +23,6 @@ import {
 } from "lucide-react";
 
 import { useEditorStore } from "../../store/editorStore";
-import { useLayoutStore } from "../../store/layoutStore";
 
 interface DocumentNavbarProps {
   title?: string;
@@ -32,7 +31,6 @@ interface DocumentNavbarProps {
 
 const DocumentNavbar = ({ title, loading }: DocumentNavbarProps) => {
   const { editor } = useEditorStore();
-  const { isCollapsed, toggleCollapse } = useLayoutStore();
 
   const isEditing = false;
 
@@ -210,19 +208,6 @@ const DocumentNavbar = ({ title, loading }: DocumentNavbarProps) => {
   return (
     <>
       <div className="flex items-center justify-center gap-0.5">
-        {/* 收起按钮 */}
-        {!isCollapsed ? (
-          <></>
-        ) : (
-          <div className="opacity-50 transition-opacity hover:opacity-80">
-            <Button
-              icon={<MenuUnfoldOutlined />}
-              onClick={toggleCollapse}
-              type="text"
-              className="hover:bg-gray-80 text-gray-400"
-            />
-          </div>
-        )}
         <div className="flex flex-col">
           {/* 标题 和 云 */}
           <div className="flex items-center gap-2">
@@ -265,9 +250,6 @@ const DocumentNavbar = ({ title, loading }: DocumentNavbarProps) => {
             <Button type="text" shape="circle" icon={<PlusOutlined />} />
           </Tooltip>
         </Flex>
-      </div>
-      <div className="shrink-0">
-        <Avatar size={32} src="/avatar.jpg" />
       </div>
     </>
   );

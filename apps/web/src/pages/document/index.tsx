@@ -18,7 +18,7 @@ const DocumentPage = () => {
   // 大纲
   const leftSidebar = useMemo(() => <DocumentAnchor />, []);
   // 批注
-  const rightSidebar = useMemo(() => <div className="size-5 bg-amber-400" />, []);
+  const rightSidebar = useMemo(() => <div className="size-6 bg-amber-400" />, []);
 
   const editorNode = useMemo(() => <Editor documentId={id!} />, [id]);
 
@@ -37,7 +37,7 @@ const DocumentPage = () => {
   return (
     <div className="flex size-full flex-col print:block print:h-auto">
       {/* 顶部导航区域 */}
-      <div className="sticky top-0 z-10 h-auto min-h-12 w-full shrink-0 border-b border-neutral-200 bg-white px-3 print:hidden">
+      <div className="sticky top-0 z-10 h-auto w-full shrink-0 border-b border-neutral-200 bg-white px-3 print:hidden">
         <Navbar>
           <DocumentNavbar title={document.title} loading={loading} />
         </Navbar>
@@ -78,7 +78,7 @@ const DocumentCanvas = memo(({ leftSidebar, rightSidebar, children }: DocumentCa
       // 如果屏幕太窄，取消边距，让编辑器居中或占满
       if (containerWidth - left - right <= 320) {
         newLeft = 24;
-        newRight = 20;
+        newRight = 24;
       }
 
       // 性能优化：值比较，防止不必要的重渲染

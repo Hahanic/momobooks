@@ -28,3 +28,7 @@ export interface IDocumentResponse {
   updatedAt: string;
   _id: string;
 }
+
+export interface IRDocumentResponse extends IDocumentResponse {
+  last_visited: string;
+}

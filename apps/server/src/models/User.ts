@@ -7,6 +7,11 @@ export interface IUser extends Document {
   avatar: string;
   password: string;
   created_at: Date;
+  recent_documents: {
+    document: mongoose.Types.ObjectId;
+    last_visited: Date;
+  }[];
+  starred_documents: mongoose.Types.ObjectId[];
 }
 
 const UserSchema: Schema = new Schema(
@@ -14,7 +19,20 @@ const UserSchema: Schema = new Schema(
     email: { type: String, required: true, unique: true, index: true },
     name: { type: String, required: true },
     avatar: { type: String },
-    password: { type: String, select: false }, // select: false 默认查询不返回密码
+    password: { type: String, select: false },
+    recent_documents: {
+      type: [
+        {
+          document: { type: Schema.Types.ObjectId, ref: "Document" },
+          last_visited: { type: Date, default: Date.now },
+        },
+      ],
+      select: false,
+    },
+    starred_documents: {
+      type: [{ type: Schema.Types.ObjectId, ref: "Document" }],
+      select: false,
+    },
   },
   {
     timestamps: {

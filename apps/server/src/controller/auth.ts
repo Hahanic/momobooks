@@ -2,11 +2,13 @@ import bcrypt from "bcrypt";
 import { Request, Response } from "express";
 import jwt from "jsonwebtoken";
 
+import { AuthRequest } from "../middlewares/auth";
 import User from "../models/User";
 import { sendResponse } from "../utils";
 
 const JWT_SECRET = process.env.JWT_SECRET;
 
+// 用户登录
 export const login = async (req: Request, res: Response) => {
   const { email, password } = req.body;
 
@@ -34,6 +36,7 @@ export const login = async (req: Request, res: Response) => {
   sendResponse(res, 200, "登录成功", { ...userToReturn, token });
 };
 
+// 注册新用户
 export const register = async (req: Request, res: Response) => {
   const { email, password } = req.body;
 
@@ -67,4 +70,26 @@ export const register = async (req: Request, res: Response) => {
   delete userToReturn.password;
 
   sendResponse(res, 201, "注册成功", { ...userToReturn, token });
+};
+
+// 记录用户访问的文档
+export const recordVisit = async (req: AuthRequest, res: Response) => {
+  const { documentId } = req.body;
+  const userId = req.user?.userId;
+
+  await User.findByIdAndUpdate(userId, {
+    $pull: { recent_documents: { document: documentId } },
+  });
+
+  await User.findByIdAndUpdate(userId, {
+    $push: {
+      recent_documents: {
+        $each: [{ document: documentId, last_visited: new Date() }],
+        $position: 0,
+        $slice: 50,
+      },
+    },
+  });
+
+  return sendResponse(res, 200, "访问记录已更新");
 };

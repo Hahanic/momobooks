@@ -2,8 +2,8 @@ import { Navigate, createBrowserRouter } from "react-router-dom";
 
 import MainLayout from "../components/layout/MainLayout";
 import AuthPage from "../pages/auth";
-import DashboardPage from "../pages/dashboard";
 import DocumentPage from "../pages/document";
+import DashboardPage from "../pages/home/index.tsx";
 import SettingsPage from "../pages/settings";
 import ProtectedRoute from "./ProtectedRoute.tsx";
 
@@ -22,15 +22,11 @@ export const router = createBrowserRouter([
     children: [
       {
         index: true,
-        element: <Navigate to="/dashboard" replace />,
+        element: <Navigate to="/home" replace />,
       },
       {
-        path: "dashboard",
+        path: "home",
         element: <DashboardPage />,
-      },
-      {
-        path: "documents",
-        element: <Navigate to="/dashboard" replace />,
       },
       {
         path: "document/:id",
