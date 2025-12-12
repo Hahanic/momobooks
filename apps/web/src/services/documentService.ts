@@ -5,6 +5,8 @@ import api from "../lib/api";
 export interface CreateDocumentParams {
   title?: string;
   parent_id?: string | null;
+  is_public?: boolean;
+  collaborators?: { user_id: string; role: "editor" | "viewer" }[];
 }
 
 export const createDocument = async (params: CreateDocumentParams) => {

@@ -13,3 +13,13 @@ export function stringToColor(str: string) {
   const c = (hash & 0x00ffffff).toString(16).toUpperCase();
   return "#" + "00000".substring(0, 6 - c.length) + c;
 }
+
+export function debounce<A extends unknown[], R>(func: (...args: A) => R, wait: number) {
+  let timeout: ReturnType<typeof setTimeout> | null = null;
+  return function (...args: A) {
+    if (timeout) clearTimeout(timeout);
+    timeout = setTimeout(() => {
+      func(...args);
+    }, wait);
+  };
+}

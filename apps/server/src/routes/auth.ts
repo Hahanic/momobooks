@@ -1,6 +1,6 @@
 import express from "express";
 
-import { login, recordVisit, register } from "../controller/auth";
+import { login, recordVisit, register, searchUsers } from "../controller/auth";
 import { authMiddleware } from "../middlewares/auth";
 
 const router = express.Router();
@@ -11,5 +11,7 @@ router.post("/register", register);
 router.post("/login", login);
 // 记录最近访问文档
 router.post("/recent", authMiddleware, recordVisit);
+// 搜索用户
+router.get("/search", authMiddleware, searchUsers);
 
 export default router;

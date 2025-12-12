@@ -9,7 +9,7 @@ import { sendResponse } from "../utils";
 // 创建新文档
 export const createDocument = async (req: AuthRequest, res: Response) => {
   try {
-    const { title, parent_id } = req.body;
+    const { title, parent_id, is_public, collaborators } = req.body;
     const userId = req.user?.userId;
 
     if (!userId) {
@@ -21,12 +21,25 @@ export const createDocument = async (req: AuthRequest, res: Response) => {
       return sendResponse(res, 404, "用户不存在");
     }
 
+    // 规范化协作者列表
+    const validCollaborators = [];
+    if (Array.isArray(collaborators)) {
+      for (const c of collaborators) {
+        if (c.user_id && isValidObjectId(c.user_id)) {
+          validCollaborators.push({
+            user_id: c.user_id,
+            role: c.role || "editor",
+          });
+        }
+      }
+    }
+
     const newDoc = new Document({
       title: title || "Untitled",
       owner_id: userId,
       parent_id: parent_id || null,
-      collaborators: [],
-      is_public: false,
+      collaborators: validCollaborators,
+      is_public: !!is_public,
       status: "active",
     });
 
@@ -141,14 +154,22 @@ export const getRecent = async (req: AuthRequest, res: Response) => {
       return sendResponse(res, 200, "获取成功", []);
     }
 
-    // 过滤掉可能已经被删除的文档，并展平结构
     const recentDocs = user.recent_documents as unknown as [];
-    const list = (recentDocs || [])
-      .filter((item: any) => item.document && item.document.status !== "trashed")
-      .map((item: any) => ({
-        ...item.document,
-        last_visited: item.last_visited,
-      }));
+    const uniqueMap = new Map();
+
+    (recentDocs || []).forEach((item: any) => {
+      if (item.document && item.document.status !== "trashed") {
+        const docId = item.document._id.toString();
+        if (!uniqueMap.has(docId)) {
+          uniqueMap.set(docId, {
+            ...item.document,
+            last_visited: item.last_visited,
+          });
+        }
+      }
+    });
+
+    const list = Array.from(uniqueMap.values());
 
     return sendResponse(res, 200, "获取成功", list);
   } catch {
@@ -204,13 +225,46 @@ export const getShared = async (req: AuthRequest, res: Response) => {
   }
 };
 
+// 获取回收站文档列表
+export const getTrash = async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = req.user?.userId;
+
+    const docs = await Document.find({
+      owner_id: userId,
+      status: "trashed",
+    })
+      .select("-__v")
+      .sort({ trashed_at: -1 })
+      .lean();
+
+    const list = docs.map((doc: any) => {
+      let daysRemaining = 30;
+      if (doc.trashed_at) {
+        const diffTime = Math.abs(new Date().getTime() - new Date(doc.trashed_at).getTime());
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        daysRemaining = Math.max(0, 30 - diffDays);
+      }
+      return {
+        ...doc,
+        days_remaining: daysRemaining,
+      };
+    });
+
+    return sendResponse(res, 200, "获取成功", list);
+  } catch (error) {
+    console.error("Get trash documents error:", error);
+    sendResponse(res, 500, "获取回收站文档失败");
+  }
+};
+
 // 重命名文档
 export const renameDocument = async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
     const { title } = req.body;
     const userId = req.user?.userId;
-
+    console.log("Rename request:", { id, title, userId });
     if (!isValidObjectId(id)) {
       return sendResponse(res, 400, "无效的文档 ID");
     }
@@ -315,7 +369,10 @@ export const deleteDocument = async (req: AuthRequest, res: Response) => {
     }
 
     // 批量软删除
-    await Document.updateMany({ _id: { $in: targetIds } }, { $set: { status: "trashed" } });
+    await Document.updateMany(
+      { _id: { $in: targetIds } },
+      { $set: { status: "trashed", trashed_at: new Date() } },
+    );
 
     sendResponse(res, 200, "删除成功");
   } catch (error) {

@@ -55,12 +55,15 @@ const DocumentSchema: Schema = new Schema(
     ],
 
     search_text: { type: String, select: false }, // 默认不查，搜索时才用
+    trashed_at: { type: Date }, // 软删除时间
   },
   { timestamps: true },
 );
 
 // 复合索引：加速 "查询某用户根目录下的活跃文档"
 DocumentSchema.index({ owner_id: 1, parent_id: 1, status: 1 });
+// TTL 索引：30天后自动删除 trashed_at 存在的文档
+DocumentSchema.index({ trashed_at: 1 }, { expireAfterSeconds: 30 * 24 * 60 * 60 });
 
 const Doc = mongoose.model<IDocument>("Document", DocumentSchema);
 

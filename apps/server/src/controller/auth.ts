@@ -93,3 +93,19 @@ export const recordVisit = async (req: AuthRequest, res: Response) => {
 
   return sendResponse(res, 200, "访问记录已更新");
 };
+
+// 搜索用户
+export const searchUsers = async (req: AuthRequest, res: Response) => {
+  const { q } = req.query;
+  if (!q || typeof q !== "string") {
+    return sendResponse(res, 200, "获取成功", []);
+  }
+
+  const users = await User.find({
+    $or: [{ name: { $regex: q, $options: "i" } }, { email: { $regex: q, $options: "i" } }],
+  })
+    .select("name email avatar")
+    .limit(10);
+
+  return sendResponse(res, 200, "获取成功", users);
+};

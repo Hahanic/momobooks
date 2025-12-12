@@ -65,6 +65,7 @@ export const DocumentActions = ({ document, trigger }: DocumentActionsProps) => 
         case "favorite":
           await starDocument(document._id);
           mutate(`/document/${document._id}`);
+          mutate("/document/starred");
           break;
 
         case "rename": {

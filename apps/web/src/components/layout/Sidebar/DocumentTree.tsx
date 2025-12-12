@@ -166,6 +166,12 @@ const DocumentTree = memo(() => {
     return <div className="px-3 py-2 text-sm text-red-500">加载文档失败</div>;
   }
 
+  if (documents && documents.length === 0) {
+    return (
+      <div className="mx-4 text-[12px] text-gray-400">当前还没有文档，赶紧创建新文档试试吧！</div>
+    );
+  }
+
   return (
     <div className="w-full">
       <Tree
