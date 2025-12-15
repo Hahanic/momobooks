@@ -1,3 +1,5 @@
+import { useState } from "react";
+
 import { Button, Dropdown, Flex, type MenuProps, Tooltip } from "antd";
 
 import { PlusOutlined, SearchOutlined } from "@ant-design/icons";
@@ -22,16 +24,18 @@ import {
   Undo2Icon,
 } from "lucide-react";
 
+import { ShareDocumentModal } from "../../components/document/ShareDocumentModal";
 import { useEditorStore } from "../../store/editorStore";
 
 interface DocumentNavbarProps {
+  documentId?: string;
   title?: string;
   loading?: boolean;
 }
 
-const DocumentNavbar = ({ title, loading }: DocumentNavbarProps) => {
+const DocumentNavbar = ({ documentId, title, loading }: DocumentNavbarProps) => {
   const { editor } = useEditorStore();
-
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const isEditing = false;
 
   const menuItems: MenuProps["items"][] = [
@@ -242,15 +246,30 @@ const DocumentNavbar = ({ title, loading }: DocumentNavbarProps) => {
       </div>
       <div className="hidden flex-1 justify-end gap-4 pr-4 sm:flex">
         <Flex align="center" gap="8px">
-          <Button icon={<ShareIcon className="size-4" />}>Share</Button>
+          <Button icon={<ShareIcon className="size-4" />} onClick={() => setIsShareModalOpen(true)}>
+            Share
+          </Button>
           <Tooltip title="搜索">
             <Button type="text" shape="circle" icon={<SearchOutlined />} />
           </Tooltip>
-          <Tooltip title="新建">
-            <Button type="text" shape="circle" icon={<PlusOutlined />} />
+          <Tooltip title="邀请协作者">
+            <Button
+              type="text"
+              shape="circle"
+              icon={<PlusOutlined />}
+              onClick={() => {
+                console.log(isShareModalOpen);
+                setIsShareModalOpen(true);
+              }}
+            />
           </Tooltip>
         </Flex>
       </div>
+      <ShareDocumentModal
+        documentId={documentId!}
+        open={isShareModalOpen}
+        onCancel={() => setIsShareModalOpen(false)}
+      />
     </>
   );
 };

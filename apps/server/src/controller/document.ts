@@ -21,6 +21,16 @@ export const createDocument = async (req: AuthRequest, res: Response) => {
       return sendResponse(res, 404, "用户不存在");
     }
 
+    if (parent_id) {
+      const parentDoc = await Document.findById(parent_id);
+      if (!parentDoc) {
+        return sendResponse(res, 400, "父文档不存在");
+      }
+      if (parentDoc.owner_id.toString() !== userId) {
+        return sendResponse(res, 403, "无权在该父文档下创建子文档");
+      }
+    }
+
     // 规范化协作者列表
     const validCollaborators = [];
     if (Array.isArray(collaborators)) {
@@ -49,6 +59,14 @@ export const createDocument = async (req: AuthRequest, res: Response) => {
     // @ts-expect-error: __v exists in mongoose document but might not be in type
     delete docResponse.__v;
 
+    // Add owner_info
+    (docResponse as any).owner_info = {
+      _id: user._id,
+      name: user.name,
+      email: user.email,
+      avatar: user.avatar,
+    };
+
     sendResponse(res, 201, "文档创建成功", docResponse);
   } catch (error) {
     console.error("Create document error:", error);
@@ -71,10 +89,17 @@ export const getDocuments = async (req: AuthRequest, res: Response) => {
       status: { $ne: "trashed" },
     })
       .select("-__v")
+      .populate("owner_id", "name email avatar")
       .sort({ updatedAt: -1 })
       .lean();
 
-    sendResponse(res, 200, "获取成功", docs);
+    const results = docs.map((doc) => ({
+      ...doc,
+      owner_id: (doc.owner_id as any)._id,
+      owner_info: doc.owner_id,
+    }));
+
+    sendResponse(res, 200, "获取成功", results);
   } catch (error) {
     console.error("Get documents error:", error);
     sendResponse(res, 500, "获取文档失败");
@@ -91,15 +116,22 @@ export const getDocument = async (req: AuthRequest, res: Response) => {
       return sendResponse(res, 400, "无效的文档 ID");
     }
 
-    const doc = await Document.findById(id).select("-__v");
+    const doc = await Document.findById(id)
+      .select("-__v")
+      .populate("owner_id", "name email avatar")
+      .populate("collaborators.user_id", "name email avatar")
+      .lean();
 
     if (!doc) {
       return sendResponse(res, 404, "文档不存在");
     }
 
     // 简单的权限检查
-    const isOwner = doc.owner_id.toString() === userId;
-    const isCollaborator = doc.collaborators.some((c) => c.user_id.toString() === userId);
+    const ownerIdStr = (doc.owner_id as any)._id.toString();
+    const isOwner = ownerIdStr === userId;
+    const isCollaborator = doc.collaborators.some(
+      (c) => (c.user_id as any)._id.toString() === userId,
+    );
 
     if (!isOwner && !isCollaborator && !doc.is_public) {
       return sendResponse(res, 403, "无权访问该文档");
@@ -109,7 +141,18 @@ export const getDocument = async (req: AuthRequest, res: Response) => {
       return sendResponse(res, 410, "文档已被删除");
     }
 
-    sendResponse(res, 200, "获取成功", { ...doc.toObject() });
+    const result = {
+      ...doc,
+      owner_id: ownerIdStr,
+      owner_info: doc.owner_id,
+      collaborators: doc.collaborators.map((c: any) => ({
+        role: c.role,
+        user_id: c.user_id._id,
+        user_info: c.user_id,
+      })),
+    };
+
+    sendResponse(res, 200, "获取成功", result);
 
     // 更新用户的最近访问列表
     if (userId) {
@@ -146,6 +189,10 @@ export const getRecent = async (req: AuthRequest, res: Response) => {
       .populate({
         path: "recent_documents.document",
         select: "-__v",
+        populate: {
+          path: "owner_id",
+          select: "name email avatar",
+        },
       })
       .select("recent_documents")
       .lean();
@@ -161,8 +208,11 @@ export const getRecent = async (req: AuthRequest, res: Response) => {
       if (item.document && item.document.status !== "trashed") {
         const docId = item.document._id.toString();
         if (!uniqueMap.has(docId)) {
+          const docData = item.document;
           uniqueMap.set(docId, {
-            ...item.document,
+            ...docData,
+            owner_id: docData.owner_id._id,
+            owner_info: docData.owner_id,
             last_visited: item.last_visited,
           });
         }
@@ -186,6 +236,10 @@ export const getStarred = async (req: AuthRequest, res: Response) => {
       .populate({
         path: "starred_documents",
         select: "-__v",
+        populate: {
+          path: "owner_id",
+          select: "name email avatar",
+        },
       })
       .select("starred_documents")
       .lean();
@@ -194,9 +248,13 @@ export const getStarred = async (req: AuthRequest, res: Response) => {
       return sendResponse(res, 200, "获取成功", []);
     }
 
-    const starredDocs = (user.starred_documents || []).filter(
-      (doc: any) => doc && doc.status !== "trashed",
-    );
+    const starredDocs = (user.starred_documents || [])
+      .filter((doc: any) => doc && doc.status !== "trashed")
+      .map((doc: any) => ({
+        ...doc,
+        owner_id: doc.owner_id._id,
+        owner_info: doc.owner_id,
+      }));
 
     return sendResponse(res, 200, "获取成功", starredDocs);
   } catch (error) {
@@ -215,10 +273,17 @@ export const getShared = async (req: AuthRequest, res: Response) => {
       status: { $ne: "trashed" },
     })
       .select("-__v")
+      .populate("owner_id", "name email avatar")
       .sort({ updatedAt: -1 })
       .lean();
 
-    return sendResponse(res, 200, "获取成功", docs);
+    const results = docs.map((doc) => ({
+      ...doc,
+      owner_id: (doc.owner_id as any)._id,
+      owner_info: doc.owner_id,
+    }));
+
+    return sendResponse(res, 200, "获取成功", results);
   } catch (error) {
     console.error("Get shared documents error:", error);
     sendResponse(res, 500, "获取共享文档失败");
@@ -235,6 +300,7 @@ export const getTrash = async (req: AuthRequest, res: Response) => {
       status: "trashed",
     })
       .select("-__v")
+      .populate("owner_id", "name email avatar")
       .sort({ trashed_at: -1 })
       .lean();
 
@@ -247,6 +313,8 @@ export const getTrash = async (req: AuthRequest, res: Response) => {
       }
       return {
         ...doc,
+        owner_id: doc.owner_id._id,
+        owner_info: doc.owner_id,
         days_remaining: daysRemaining,
       };
     });
@@ -290,6 +358,65 @@ export const renameDocument = async (req: AuthRequest, res: Response) => {
   } catch (error) {
     console.error("Rename document error:", error);
     sendResponse(res, 500, "重命名文档失败");
+  }
+};
+
+// 更新文档（通用更新，包括协作者和公开状态）
+export const updateDocument = async (req: AuthRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { title, is_public, collaborators } = req.body;
+    const userId = req.user?.userId;
+
+    if (!isValidObjectId(id)) {
+      return sendResponse(res, 400, "无效的文档 ID");
+    }
+
+    const doc = await Document.findById(id);
+
+    if (!doc) {
+      return sendResponse(res, 404, "文档不存在");
+    }
+
+    if (doc.owner_id.toString() !== userId) {
+      return sendResponse(res, 403, "无权修改该文档");
+    }
+
+    if (title !== undefined) doc.title = title;
+    if (is_public !== undefined) doc.is_public = !!is_public;
+
+    if (collaborators !== undefined && Array.isArray(collaborators)) {
+      const validCollaborators = [];
+      for (const c of collaborators) {
+        if (c.user_id && isValidObjectId(c.user_id)) {
+          // 确保不能添加自己为协作者
+          if (c.user_id.toString() !== userId) {
+            validCollaborators.push({
+              user_id: c.user_id,
+              role: c.role || "editor",
+            });
+          }
+        }
+      }
+      doc.collaborators = validCollaborators;
+    }
+
+    await doc.save();
+
+    // Populate owner info for response consistency
+    await doc.populate("owner_id", "name email avatar");
+    const result = {
+      ...doc.toObject(),
+      owner_id: (doc.owner_id as any)._id,
+      owner_info: doc.owner_id,
+    };
+    // @ts-expect-error: __v exists
+    delete result.__v;
+
+    sendResponse(res, 200, "更新成功", result);
+  } catch (error) {
+    console.error("Update document error:", error);
+    sendResponse(res, 500, "更新文档失败");
   }
 };
 
@@ -378,5 +505,110 @@ export const deleteDocument = async (req: AuthRequest, res: Response) => {
   } catch (error) {
     console.error("Delete document error:", error);
     sendResponse(res, 500, "删除文档失败");
+  }
+};
+
+// 恢复文档
+export const restoreDocument = async (req: AuthRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user?.userId;
+
+    if (!isValidObjectId(id)) {
+      return sendResponse(res, 400, "无效的文档 ID");
+    }
+
+    const doc = await Document.findById(id);
+
+    if (!doc) {
+      return sendResponse(res, 404, "文档不存在");
+    }
+
+    if (doc.owner_id.toString() !== userId) {
+      return sendResponse(res, 403, "无权恢复该文档");
+    }
+
+    // 递归查找所有子文档
+    const descendants = await Document.aggregate([
+      { $match: { _id: new mongoose.Types.ObjectId(id) } },
+      {
+        $graphLookup: {
+          from: "documents",
+          startWith: "$_id",
+          connectFromField: "_id",
+          connectToField: "parent_id",
+          as: "children",
+        },
+      },
+    ]);
+
+    const targetIds = [id];
+    if (descendants.length > 0 && descendants[0].children) {
+      descendants[0].children.forEach((child: any) => {
+        targetIds.push(child._id);
+      });
+    }
+
+    // 批量恢复
+    await Document.updateMany(
+      { _id: { $in: targetIds } },
+      { $set: { status: "active" }, $unset: { trashed_at: 1 } },
+    );
+
+    sendResponse(res, 200, "恢复成功");
+  } catch (error) {
+    console.error("Restore document error:", error);
+    sendResponse(res, 500, "恢复文档失败");
+  }
+};
+
+// 彻底删除文档
+export const permanentDeleteDocument = async (req: AuthRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user?.userId;
+
+    if (!isValidObjectId(id)) {
+      return sendResponse(res, 400, "无效的文档 ID");
+    }
+
+    const doc = await Document.findById(id);
+
+    if (!doc) {
+      return sendResponse(res, 404, "文档不存在");
+    }
+
+    if (doc.owner_id.toString() !== userId) {
+      return sendResponse(res, 403, "无权删除该文档");
+    }
+
+    // 递归查找所有子文档
+    const descendants = await Document.aggregate([
+      { $match: { _id: new mongoose.Types.ObjectId(id) } },
+      {
+        $graphLookup: {
+          from: "documents",
+          startWith: "$_id",
+          connectFromField: "_id",
+          connectToField: "parent_id",
+          as: "children",
+        },
+      },
+    ]);
+
+    const targetIds = [id];
+    if (descendants.length > 0 && descendants[0].children) {
+      descendants[0].children.forEach((child: any) => {
+        targetIds.push(child._id);
+      });
+    }
+
+    // 批量彻底删除
+    await Document.deleteMany({ _id: { $in: targetIds } });
+
+    sendResponse(res, 200, "彻底删除成功");
+  } catch (error) {
+    console.error("Permanent delete document error:", error);
+    sendResponse(res, 500, "彻底删除文档失败");
   }
 };

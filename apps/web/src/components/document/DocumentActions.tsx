@@ -69,7 +69,6 @@ export const DocumentActions = ({ document, trigger }: DocumentActionsProps) => 
           break;
 
         case "rename": {
-          // 简单的重命名实现，后续可替换为 Modal
           const newTitle = window.prompt("请输入新标题", document.title);
           if (newTitle && newTitle !== document.title) {
             await renameDocument(document._id, { title: newTitle });

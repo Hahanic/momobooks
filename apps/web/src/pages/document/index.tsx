@@ -14,7 +14,6 @@ import Toolbar from "./toolbar";
 const DocumentPage = () => {
   const { id } = useParams<{ id: string }>();
   const { document, loading, error } = useDocument();
-
   // 大纲
   const leftSidebar = useMemo(() => <DocumentAnchor />, []);
   // 批注
@@ -39,7 +38,7 @@ const DocumentPage = () => {
       {/* 顶部导航区域 */}
       <div className="sticky top-0 z-10 h-auto w-full shrink-0 border-b border-neutral-200 bg-white px-3 print:hidden">
         <Navbar>
-          <DocumentNavbar title={document.title} loading={loading} />
+          <DocumentNavbar title={document.title} documentId={id} loading={loading} />
         </Navbar>
         <Toolbar />
       </div>

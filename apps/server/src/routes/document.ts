@@ -9,8 +9,11 @@ import {
   getShared,
   getStarred,
   getTrash,
+  permanentDeleteDocument,
   renameDocument,
+  restoreDocument,
   starDocument,
+  updateDocument,
 } from "../controller/document";
 import { authMiddleware } from "../middlewares/auth";
 
@@ -24,7 +27,10 @@ router.get("/starred", authMiddleware, getStarred);
 router.get("/trash", authMiddleware, getTrash);
 router.post("/star", authMiddleware, starDocument);
 router.get("/:id", authMiddleware, getDocument);
+router.put("/:id", authMiddleware, updateDocument);
 router.post("/rename/:id", authMiddleware, renameDocument);
+router.post("/restore/:id", authMiddleware, restoreDocument);
+router.delete("/permanent/:id", authMiddleware, permanentDeleteDocument);
 router.delete("/:id", authMiddleware, deleteDocument);
 
 export default router;

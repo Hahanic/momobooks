@@ -12,8 +12,8 @@ const DocumentNotFound = () => {
         title="文档不存在或无法访问"
         subTitle="该文档可能已被删除，或者您没有权限查看此文档。"
         extra={
-          <Button type="primary" onClick={() => navigate("/dashboard")}>
-            返回工作台
+          <Button type="primary" onClick={() => navigate("/home")}>
+            返回主页
           </Button>
         }
       />

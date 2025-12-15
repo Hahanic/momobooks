@@ -15,12 +15,14 @@ import templatecIcon from "../../assets/icon/template.svg";
 import trashcIcon from "../../assets/icon/trash.svg";
 import { CreateDocumentModal } from "../../components/document/CreateDocumentModal";
 import { DocumentActions } from "../../components/document/DocumentActions";
+import { TrashDocumentModal } from "../../components/document/TrashDocumentModal";
 import Navbar from "../../components/layout/Navbar";
 import {
   getRecentDocuments,
   getSharedDocuments,
   getStarredDocuments,
 } from "../../services/documentService";
+import { useUserStore } from "../../store/userStore";
 
 type TableDataItem = IDocumentResponse & { last_visited?: string };
 
@@ -33,9 +35,11 @@ const QUICK_ACTIONS = [
 
 const HomePage = () => {
   const navigate = useNavigate();
+  const user = useUserStore((state) => state.user);
   const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
   const [activeTab, setActiveTab] = useState<"recent" | "shared" | "starred">("recent");
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isTrashModalOpen, setIsTrashModalOpen] = useState(false);
 
   const getKey = () => {
     switch (activeTab) {
@@ -91,7 +95,11 @@ const HomePage = () => {
         title: "所有者",
         dataIndex: "owner_id",
         key: "owner_id",
-        render: () => <span className="text-gray-500">我</span>,
+        render: (_, record) => (
+          <span className="text-gray-500">
+            {record.owner_info?._id === user?._id ? "我" : record.owner_info?.name}
+          </span>
+        ),
       },
       {
         title: "操作",
@@ -99,7 +107,7 @@ const HomePage = () => {
         render: (_, record) => <DocumentActions document={record} />,
       },
     ],
-    [activeTab, navigate],
+    [activeTab, navigate, user?._id],
   );
 
   const onSelectChange = (newSelectedRowKeys: React.Key[]) => {
@@ -129,11 +137,11 @@ const HomePage = () => {
                   if (action.action === "create") {
                     setIsCreateModalOpen(true);
                   } else if (action.action === "template") {
-                    navigate("/templates");
+                    // navigate("/templates");
                   } else if (action.action === "knowledge") {
-                    navigate("/knowledge/new");
+                    // navigate("/knowledge/new");
                   } else if (action.action === "trash") {
-                    navigate("/trash");
+                    setIsTrashModalOpen(true);
                   }
                 }}
               >
@@ -188,6 +196,7 @@ const HomePage = () => {
         </Layout>
       </div>
       <CreateDocumentModal open={isCreateModalOpen} onCancel={() => setIsCreateModalOpen(false)} />
+      <TrashDocumentModal open={isTrashModalOpen} onCancel={() => setIsTrashModalOpen(false)} />
     </div>
   );
 };

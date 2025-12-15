@@ -19,10 +19,12 @@ export interface IDocumentResponse {
   collaborators: Array<{
     role: "editor" | "viewer";
     user_id: string;
+    user_info?: IUser;
   }>;
   createdAt: string;
   is_public: boolean;
   owner_id: string;
+  owner_info: IUser;
   parent_id: string | null;
   status: "active" | "archived" | "trashed";
   title: string;
