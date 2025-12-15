@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-import { Button, Dropdown, Flex, type MenuProps, Tooltip } from "antd";
+import { Avatar, Button, Dropdown, Flex, type MenuProps, Tooltip } from "antd";
 
 import { PlusOutlined, SearchOutlined } from "@ant-design/icons";
 import {
@@ -25,16 +25,19 @@ import {
 } from "lucide-react";
 
 import { ShareDocumentModal } from "../../components/document/ShareDocumentModal";
+import { useCollaborators } from "../../hooks/useCollaborators";
 import { useEditorStore } from "../../store/editorStore";
 
 interface DocumentNavbarProps {
   documentId?: string;
   title?: string;
   loading?: boolean;
+  readOnly?: boolean;
 }
 
-const DocumentNavbar = ({ documentId, title, loading }: DocumentNavbarProps) => {
+const DocumentNavbar = ({ documentId, title, loading, readOnly }: DocumentNavbarProps) => {
   const { editor } = useEditorStore();
+  const collaborators = useCollaborators();
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const isEditing = false;
 
@@ -81,6 +84,7 @@ const DocumentNavbar = ({ documentId, title, loading }: DocumentNavbarProps) => 
         label: "New Document",
         icon: <FilePlusIcon className="size-4" />,
         onClick: () => window.open("/", "_blank"),
+        disabled: readOnly,
       },
       {
         type: "divider",
@@ -90,12 +94,14 @@ const DocumentNavbar = ({ documentId, title, loading }: DocumentNavbarProps) => 
         label: "Rename",
         icon: <FilePenIcon className="size-4" />,
         onClick: () => console.log("Rename"),
+        disabled: readOnly,
       },
       {
         key: "Remove",
         label: "Remove",
         icon: <TrashIcon className="size-4" />,
         danger: true,
+        disabled: readOnly,
       },
       {
         type: "divider",
@@ -116,7 +122,7 @@ const DocumentNavbar = ({ documentId, title, loading }: DocumentNavbarProps) => 
         icon: <Undo2Icon className="size-4" />,
         extra: "Ctrl+Z",
         onClick: () => editor?.chain().focus().undo().run(),
-        disabled: !editor?.can().undo(),
+        disabled: !editor?.can().undo() || readOnly,
       },
       {
         key: "Redo",
@@ -124,7 +130,7 @@ const DocumentNavbar = ({ documentId, title, loading }: DocumentNavbarProps) => 
         icon: <Redo2Icon className="size-4" />,
         extra: "Ctrl+Y",
         onClick: () => editor?.chain().focus().redo().run(),
-        disabled: !editor?.can().redo(),
+        disabled: !editor?.can().redo() || readOnly,
       },
     ],
     // Insert
@@ -234,17 +240,24 @@ const DocumentNavbar = ({ documentId, title, loading }: DocumentNavbarProps) => 
           </div>
           {/* 编辑菜单 */}
           <div className="hidden gap-1 sm:flex">
-            {["File", "Edit", "Insert", "Format"].map((label, index) => (
-              <Dropdown key={label} menu={{ items: menuItems[index] }}>
-                <button className="rounded-sm px-2 py-0.5 text-sm font-normal transition-colors hover:bg-neutral-100">
-                  {label}
-                </button>
-              </Dropdown>
-            ))}
+            {[
+              { label: "File", items: menuItems[0] },
+              { label: "Edit", items: menuItems[1] },
+              { label: "Insert", items: menuItems[2] },
+              { label: "Format", items: menuItems[3] },
+            ]
+              .filter((menu) => !readOnly || menu.label === "File")
+              .map((menu) => (
+                <Dropdown key={menu.label} menu={{ items: menu.items }}>
+                  <button className="rounded-sm px-2 py-0.5 text-sm font-normal transition-colors hover:bg-neutral-100">
+                    {menu.label}
+                  </button>
+                </Dropdown>
+              ))}
           </div>
         </div>
       </div>
-      <div className="hidden flex-1 justify-end gap-4 pr-4 sm:flex">
+      <div className="hidden flex-1 justify-end gap-4 pr-2 sm:flex">
         <Flex align="center" gap="8px">
           <Button icon={<ShareIcon className="size-4" />} onClick={() => setIsShareModalOpen(true)}>
             Share
@@ -257,12 +270,18 @@ const DocumentNavbar = ({ documentId, title, loading }: DocumentNavbarProps) => 
               type="text"
               shape="circle"
               icon={<PlusOutlined />}
-              onClick={() => {
-                console.log(isShareModalOpen);
-                setIsShareModalOpen(true);
-              }}
+              onClick={() => setIsShareModalOpen(true)}
             />
           </Tooltip>
+          <Avatar.Group max={{ count: 4 }}>
+            {collaborators.map((c) => (
+              <Tooltip key={c.clientId} title={c.user.name}>
+                <Avatar src={c.user.avatar} style={{ backgroundColor: c.user.color }}>
+                  {c.user.name?.charAt(0)?.toUpperCase()}
+                </Avatar>
+              </Tooltip>
+            ))}
+          </Avatar.Group>
         </Flex>
       </div>
       <ShareDocumentModal

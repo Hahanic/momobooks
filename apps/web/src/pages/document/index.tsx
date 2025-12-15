@@ -6,6 +6,7 @@ import { Layout, Spin } from "antd";
 import Navbar from "../../components/layout/Navbar";
 import Editor from "../../editor";
 import { useDocument } from "../../hooks/useDocument";
+import { useUserStore } from "../../store/userStore";
 import DocumentAnchor from "./anchor";
 import DocumentNotFound from "./documentNotFound";
 import DocumentNavbar from "./navbar";
@@ -13,13 +14,27 @@ import Toolbar from "./toolbar";
 
 const DocumentPage = () => {
   const { id } = useParams<{ id: string }>();
+  const { user } = useUserStore();
   const { document, loading, error } = useDocument();
+
+  const isEditable = useMemo(() => {
+    if (!document || !user) return false;
+    if (document.owner_id === user._id) return true;
+    const collaborator = document.collaborators?.find((c) => c.user_id === user._id);
+    if (collaborator && collaborator.role === "editor") return true;
+
+    return false;
+  }, [document, user]);
+
   // 大纲
   const leftSidebar = useMemo(() => <DocumentAnchor />, []);
-  // 批注
-  const rightSidebar = useMemo(() => <div className="size-6 bg-amber-400" />, []);
+  // 批注 TODO
+  const rightSidebar = useMemo(() => <div className="size-6" />, []);
 
-  const editorNode = useMemo(() => <Editor documentId={id!} />, [id]);
+  const editorNode = useMemo(
+    () => <Editor documentId={id!} editable={isEditable} />,
+    [id, isEditable],
+  );
 
   if (loading) {
     return (
@@ -38,9 +53,14 @@ const DocumentPage = () => {
       {/* 顶部导航区域 */}
       <div className="sticky top-0 z-10 h-auto w-full shrink-0 border-b border-neutral-200 bg-white px-3 print:hidden">
         <Navbar>
-          <DocumentNavbar title={document.title} documentId={id} loading={loading} />
+          <DocumentNavbar
+            title={document.title}
+            documentId={id}
+            loading={loading}
+            readOnly={!isEditable}
+          />
         </Navbar>
-        <Toolbar />
+        <Toolbar readOnly={!isEditable} />
       </div>
 
       <DocumentCanvas leftSidebar={leftSidebar} rightSidebar={rightSidebar}>

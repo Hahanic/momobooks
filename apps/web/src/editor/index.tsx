@@ -4,13 +4,12 @@ import useCollaboration from "../hooks/useCollaboration";
 import { useUserStore } from "../store/userStore";
 import TiptapEditor from "./tiptapEditor";
 
-// 引入上面的子组件
-
 interface EditorProps {
   documentId: string;
+  editable: boolean;
 }
 
-const Editor = ({ documentId }: EditorProps) => {
+const Editor = ({ documentId, editable }: EditorProps) => {
   const { user } = useUserStore();
   const collab = useCollaboration(documentId);
 
@@ -23,7 +22,9 @@ const Editor = ({ documentId }: EditorProps) => {
     );
   }
 
-  return <TiptapEditor ydoc={collab.ydoc!} provider={collab.provider} user={user} />;
+  return (
+    <TiptapEditor ydoc={collab.ydoc!} provider={collab.provider} user={user} editable={editable} />
+  );
 };
 
 export default Editor;

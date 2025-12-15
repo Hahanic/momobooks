@@ -45,8 +45,8 @@ export const hocuspocusServer = new Hocuspocus({
 
   // 3. 鉴权：决定用户能否连接
   async onAuthenticate(data) {
-    const { token } = data;
-    console.log("[Hocuspocus] Authenticating...");
+    const { token, documentName } = data;
+    console.log(`[Hocuspocus] Authenticating user for doc ${documentName}`);
 
     // 3.1 校验 Token
     if (!token) {
@@ -58,32 +58,52 @@ export const hocuspocusServer = new Hocuspocus({
       const decoded = jwt.verify(token, JWT_SECRET) as { userId: string };
       const userId = decoded.userId;
       // 3.2 校验文档权限
-      const docId = data.documentName;
+      const docId = documentName;
 
       const doc = await Doc.findById(docId);
 
-      if (!doc) throw new Error("Document not found");
+      if (!doc) {
+        console.error(`[Hocuspocus] Document ${docId} not found`);
+        throw new Error("Document not found");
+      }
 
       const isOwner = doc.owner_id.toString() === userId;
-      const isCollaborator = doc.collaborators.some((c) => c.user_id.toString() === userId);
+      const collaborator = doc.collaborators.find((c) => c.user_id.toString() === userId);
       const isPublic = doc.is_public;
 
-      if (!isOwner && !isCollaborator && !isPublic) {
+      console.log(
+        `[Hocuspocus] User ${userId} access check: Owner=${isOwner}, Collab=${!!collaborator}, Public=${isPublic}`,
+      );
+
+      // 如果不是拥有者，不是协作者，且文档不公开 -> 禁止访问
+      if (!isOwner && !collaborator && !isPublic) {
+        console.error(`[Hocuspocus] Access denied for user ${userId}`);
         throw new Error("Forbidden: You do not have access to this document");
       }
 
-      // 3.3 获取用户信息
+      // 3.3 权限控制 (Read-Only)
+      // 默认只读
+      let canEdit = false;
+
+      if (isOwner) {
+        canEdit = true;
+      } else if (collaborator && collaborator.role === "editor") {
+        canEdit = true;
+      }
+
+      console.log(`[Hocuspocus] User ${userId} canEdit=${canEdit}`);
+
+      // 3.4 获取用户信息
       const user = await User.findById(userId);
       if (!user) throw new Error("User not found");
-
-      // 3.4 将用户信息注入上下文，供后续步骤（如光标显示）使用
+      // 3.5 将用户信息注入上下文
       return {
         user: {
           id: userId,
           name: user.name,
           avatar: user.avatar,
-          color: "#" + Math.floor(Math.random() * 16777215).toString(16), // 随机颜色，或者从用户配置取
         },
+        readonly: !canEdit,
       };
     } catch (err) {
       console.error("Auth failed:", err);

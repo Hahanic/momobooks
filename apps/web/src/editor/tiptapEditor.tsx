@@ -24,13 +24,15 @@ interface TiptapEditorProps {
   ydoc: Y.Doc;
   provider: HocuspocusProvider;
   user: IUser | null;
+  editable: boolean;
 }
 
-const TiptapEditor = memo(({ ydoc, provider, user }: TiptapEditorProps) => {
-  const { setEditor } = useEditorStore();
+const TiptapEditor = memo(({ ydoc, provider, user, editable }: TiptapEditorProps) => {
+  const { setEditor, setProvider } = useEditorStore();
 
   const editor = useEditor(
     {
+      editable,
       editorProps: {
         attributes: {
           class:
@@ -41,6 +43,7 @@ const TiptapEditor = memo(({ ydoc, provider, user }: TiptapEditorProps) => {
         StarterKit.configure({
           heading: false,
           undoRedo: false,
+          codeBlock: false,
         }),
         CustomHeading,
         CodeBlock.configure({
@@ -62,7 +65,6 @@ const TiptapEditor = memo(({ ydoc, provider, user }: TiptapEditorProps) => {
         TaskList,
         TableKit.configure({ table: { resizable: true } }),
 
-        // 核心：直接配置，无需条件判断
         Collaboration.configure({
           document: ydoc,
         }),
@@ -71,6 +73,8 @@ const TiptapEditor = memo(({ ydoc, provider, user }: TiptapEditorProps) => {
           user: {
             name: user?.name || "Anonymous",
             color: stringToColor(user?.name || "Anonymous"),
+            avatar: user?.avatar,
+            id: user?._id,
           },
         }),
       ],
@@ -80,14 +84,17 @@ const TiptapEditor = memo(({ ydoc, provider, user }: TiptapEditorProps) => {
 
   useEffect(() => {
     if (editor) {
-      console.log("TiptapEditor setEditor");
       setEditor(editor);
+    }
+    if (provider) {
+      setProvider(provider);
     }
     return () => {
       // 组件卸载时清理，防止 Toolbar 操作已销毁的实例
       setEditor(null);
+      setProvider(null);
     };
-  }, [editor, setEditor]);
+  }, [editor, provider, setEditor, setProvider]);
 
   if (!editor) return null;
 

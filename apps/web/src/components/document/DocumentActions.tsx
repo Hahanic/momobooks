@@ -82,17 +82,22 @@ export const DocumentActions = ({ document, trigger }: DocumentActionsProps) => 
         case "delete":
           modal.confirm({
             title: "确认删除",
-            content: `确定要删除文档 "${document.title}" 吗？此操作无法撤销。`,
+            content: `确定要删除文档 "${document.title}" 吗？文档会在回收站中保留30天，期间可以恢复。`,
             okText: "删除",
             okType: "danger",
             cancelText: "取消",
             onOk: async () => {
-              await deleteDocument(document._id);
-              message.success("删除成功");
-              mutate("/document");
-              mutate("/document/recent");
-              if (window.location.pathname === `/document/${document._id}`) {
-                navigate("/home");
+              try {
+                await deleteDocument(document._id);
+                message.success("删除成功");
+                mutate("/document");
+                mutate("/document/recent");
+                if (window.location.pathname === `/document/${document._id}`) {
+                  navigate("/home");
+                }
+              } catch (error) {
+                console.error(error);
+                message.error("删除失败");
               }
             },
           });

@@ -1,3 +1,4 @@
+// 这个 Hook 用于管理协作编辑的 Yjs 文档和 Hocuspocus 提供者
 import { useEffect, useState } from "react";
 
 import type { HocuspocusProvider } from "@hocuspocus/provider";

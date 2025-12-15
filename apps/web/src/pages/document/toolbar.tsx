@@ -710,9 +710,12 @@ const InsertGroup = () => {
   );
 };
 
-const Toolbar = () => {
+const Toolbar = ({ readOnly }: { readOnly?: boolean }) => {
   const { editor } = useEditorStore();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  if (readOnly) return null;
+
   return (
     <>
       {/* Desktop Toolbar */}

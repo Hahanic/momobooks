@@ -31,6 +31,9 @@ export const ShareDocumentModal = ({ documentId, open, onCancel }: ShareDocument
     () => getDocument(documentId),
   );
 
+  // 是否是所有者
+  const isOwner = currentUser?._id === document?.owner_id;
+
   // 当前协作者和公开状态
   const [collaborators, setCollaborators] = useState<
     { user_id: string; role: "editor" | "viewer"; user_info?: IUser }[]
@@ -166,6 +169,7 @@ export const ShareDocumentModal = ({ documentId, open, onCancel }: ShareDocument
               value={selectedUserToAdd}
               onChange={setSelectedUserToAdd}
               optionLabelProp="label"
+              disabled={!isOwner}
             >
               {searchUsers.map((user) => (
                 <Select.Option key={user._id} value={user._id} label={user.name}>
@@ -182,7 +186,7 @@ export const ShareDocumentModal = ({ documentId, open, onCancel }: ShareDocument
             <Button
               type="primary"
               onClick={handleAddUser}
-              disabled={!selectedUserToAdd}
+              disabled={!selectedUserToAdd || !isOwner}
               loading={loading}
             >
               邀请
@@ -198,11 +202,16 @@ export const ShareDocumentModal = ({ documentId, open, onCancel }: ShareDocument
               <div className="flex flex-col">
                 <span className="font-medium">公开访问</span>
                 <span className="text-xs text-gray-500">
-                  {isPublic ? "任何拥有链接的人都可以查看和修改" : "仅受邀用户可访问"}
+                  {isPublic ? "任何拥有链接的人都可以查看该文档" : "仅受邀用户可访问"}
                 </span>
               </div>
             </div>
-            <Switch checked={isPublic} onChange={handlePublicChange} loading={loading} />
+            <Switch
+              checked={isPublic}
+              onChange={handlePublicChange}
+              loading={loading}
+              disabled={!isOwner}
+            />
           </div>
 
           {/* 协作者列表 */}
@@ -239,7 +248,7 @@ export const ShareDocumentModal = ({ documentId, open, onCancel }: ShareDocument
                               { value: "editor", label: "可编辑" },
                               { value: "viewer", label: "仅查看" },
                             ]}
-                            disabled={loading}
+                            disabled={loading || !isOwner}
                           />,
                           <Button
                             key="remove"
@@ -248,7 +257,7 @@ export const ShareDocumentModal = ({ documentId, open, onCancel }: ShareDocument
                             danger
                             icon={<Trash2 size={14} />}
                             onClick={() => handleRemoveCollaborator(item.user_id)}
-                            disabled={loading}
+                            disabled={loading || !isOwner}
                           />,
                         ]
                   }

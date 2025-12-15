@@ -11,6 +11,7 @@ import { type IUser } from "@momobooks/shared";
 import { debounce } from "../../lib/utils";
 import { authService } from "../../services/authService";
 import { createDocument } from "../../services/documentService";
+import { useUserStore } from "../../store/userStore";
 
 interface CreateDocumentModalProps {
   open: boolean;
@@ -18,6 +19,7 @@ interface CreateDocumentModalProps {
 }
 
 export const CreateDocumentModal = ({ open, onCancel }: CreateDocumentModalProps) => {
+  const { user: currentUser } = useUserStore();
   const [form] = Form.useForm();
   const navigate = useNavigate();
   const { mutate } = useSWRConfig();
@@ -35,7 +37,7 @@ export const CreateDocumentModal = ({ open, onCancel }: CreateDocumentModalProps
       setFetchingUsers(true);
       try {
         const results = await authService.searchUsers(value);
-        setUsers(results);
+        setUsers(results.filter((u) => u._id !== currentUser?._id));
       } catch (error) {
         console.error(error);
       } finally {
@@ -43,7 +45,7 @@ export const CreateDocumentModal = ({ open, onCancel }: CreateDocumentModalProps
       }
     };
     return debounce(loadOptions, 500);
-  }, []);
+  }, [currentUser]);
 
   const handleOk = async () => {
     try {
@@ -69,7 +71,7 @@ export const CreateDocumentModal = ({ open, onCancel }: CreateDocumentModalProps
       form.resetFields();
     } catch (error) {
       console.error(error);
-      // message.error("创建失败"); // validateFields throws error, don't show generic error
+      // message.error("创建失败")
     } finally {
       setLoading(false);
     }
