@@ -5,13 +5,12 @@ import { App, Button, Modal, Table, Tooltip } from "antd";
 import { RotateCcw, Trash2 } from "lucide-react";
 import useSWR, { useSWRConfig } from "swr";
 
-import { type IDocumentResponse } from "@momobooks/shared";
-
 import {
   getTrashDocuments,
   permanentDeleteDocument,
   restoreDocument,
 } from "../../services/documentService";
+import { type IDocumentResponse } from "../../types/index.ts";
 
 interface TrashDocumentModalProps {
   open: boolean;

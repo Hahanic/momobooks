@@ -1,6 +1,5 @@
-import { type IDocumentResponse, type IRDocumentResponse } from "@momobooks/shared";
-
 import api from "../lib/api";
+import { type IDocumentResponse, type IRDocumentResponse } from "../types/index.ts";
 
 export interface CreateDocumentParams {
   title?: string;

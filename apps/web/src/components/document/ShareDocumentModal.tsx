@@ -6,12 +6,11 @@ import { UserOutlined } from "@ant-design/icons";
 import { Globe, Lock, Trash2 } from "lucide-react";
 import useSWR, { useSWRConfig } from "swr";
 
-import { type IDocumentResponse, type IUser } from "@momobooks/shared";
-
 import { debounce } from "../../lib/utils";
 import { authService } from "../../services/authService";
 import { getDocument, updateDocument } from "../../services/documentService";
 import { useUserStore } from "../../store/userStore";
+import { type IDocumentResponse, type IUser } from "../../types/index.ts";
 
 interface ShareDocumentModalProps {
   documentId: string;

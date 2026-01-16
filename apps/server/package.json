@@ -2,19 +2,17 @@
   "name": "@momobooks/server",
   "version": "1.0.0",
   "description": "Momobooks Backend Server",
-  "main": "src/index.ts",
+  "main": "src/index.js",
   "type": "module",
   "scripts": {
-    "dev": "tsx watch src/index.ts",
-    "build": "tsc",
+    "dev": "node --watch --env-file=.env src/index.js",
     "lint": "eslint .",
-    "start": "node dist/index.js",
+    "start": "node src/index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
     "@hocuspocus/extension-database": "^3.4.0",
     "@hocuspocus/server": "^3.4.0",
-    "@momobooks/shared": "workspace:*",
     "bcrypt": "^6.0.0",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
@@ -26,14 +24,7 @@
     "yjs": "^13.6.27"
   },
   "devDependencies": {
-    "@momobooks/eslint-config": "workspace:*",
-    "@types/bcrypt": "^6.0.0",
-    "@types/cors": "^2.8.19",
-    "@types/express": "^5.0.5",
-    "@types/express-ws": "^3.0.6",
-    "@types/jsonwebtoken": "^9.0.10",
-    "eslint": "^9.39.1",
-    "tsx": "^4.20.6"
+    "eslint": "^9.39.1"
   },
   "keywords": [],
   "author": "",

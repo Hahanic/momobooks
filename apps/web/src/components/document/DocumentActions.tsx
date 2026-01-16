@@ -18,14 +18,13 @@ import {
 } from "lucide-react";
 import { useSWRConfig } from "swr";
 
-import { type IDocumentResponse } from "@momobooks/shared";
-
 import {
   createDocument,
   deleteDocument,
   renameDocument,
   starDocument,
 } from "../../services/documentService";
+import { type IDocumentResponse } from "../../types/index.ts";
 
 interface DocumentActionsProps {
   document: IDocumentResponse;

@@ -7,6 +7,7 @@ dist
 dist-ssr
 build
 out
+stats.html
 
 # Logs
 logs

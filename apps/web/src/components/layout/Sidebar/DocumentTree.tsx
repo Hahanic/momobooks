@@ -6,9 +6,8 @@ import { App, Skeleton, Tree, type TreeDataNode } from "antd";
 import { BookTextIcon, PlusIcon } from "lucide-react";
 import useSWR, { useSWRConfig } from "swr";
 
-import { type IDocumentResponse } from "@momobooks/shared";
-
 import { createDocument, getDocuments } from "../../../services/documentService";
+import { type IDocumentResponse } from "../../../types/index.ts";
 import { DocumentActions } from "../../document/DocumentActions";
 
 // 定义回调函数的类型

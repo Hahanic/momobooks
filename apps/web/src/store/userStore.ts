@@ -1,9 +1,8 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
-import type { IUser, IUserCredentials } from "@momobooks/shared";
-
 import { authService } from "../services/authService";
+import type { IUser, IUserCredentials } from "../types/index.ts";
 
 interface UserState {
   user: IUser | null;

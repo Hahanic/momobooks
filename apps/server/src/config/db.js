@@ -3,7 +3,7 @@ import mongoose from "mongoose";
 
 dotenv.config();
 
-export const connectDB = async (): Promise<void> => {
+export const connectDB = async () => {
   try {
     await mongoose.connect(
       `mongodb://${process.env.DBHOST}:${process.env.DBPORT}/${process.env.DBNAME}`,

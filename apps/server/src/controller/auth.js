@@ -1,15 +1,13 @@
 import bcrypt from "bcrypt";
-import { Request, Response } from "express";
 import jwt from "jsonwebtoken";
 
-import { AuthRequest } from "../middlewares/auth";
-import User from "../models/User";
-import { sendResponse } from "../utils";
+import User from "../models/User.js";
+import { sendResponse } from "../utils/index.js";
 
 const JWT_SECRET = process.env.JWT_SECRET;
 
 // 用户登录
-export const login = async (req: Request, res: Response) => {
+export const login = async (req, res) => {
   const { email, password } = req.body;
 
   if (!email || !password) {
@@ -25,19 +23,18 @@ export const login = async (req: Request, res: Response) => {
     return sendResponse(res, 401, "账户或密码错误");
   }
 
-  const token = jwt.sign({ userId: user._id, email: user.email }, JWT_SECRET!, {
+  const token = jwt.sign({ userId: user._id, email: user.email }, JWT_SECRET, {
     expiresIn: "7d",
   });
 
   const userToReturn = user.toObject();
-  // @ts-expect-error password is required in schema but we want to remove it from response
   delete userToReturn.password;
 
   sendResponse(res, 200, "登录成功", { ...userToReturn, token });
 };
 
 // 注册新用户
-export const register = async (req: Request, res: Response) => {
+export const register = async (req, res) => {
   const { email, password } = req.body;
 
   if (!email || !password) {
@@ -61,19 +58,18 @@ export const register = async (req: Request, res: Response) => {
   });
   await newUser.save();
 
-  const token = jwt.sign({ userId: newUser._id, email: newUser.email }, JWT_SECRET!, {
+  const token = jwt.sign({ userId: newUser._id, email: newUser.email }, JWT_SECRET, {
     expiresIn: "7d",
   });
 
   const userToReturn = newUser.toObject();
-  // @ts-expect-error password is required in schema but we want to remove it from response
   delete userToReturn.password;
 
   sendResponse(res, 201, "注册成功", { ...userToReturn, token });
 };
 
 // 记录用户访问的文档
-export const recordVisit = async (req: AuthRequest, res: Response) => {
+export const recordVisit = async (req, res) => {
   const { documentId } = req.body;
   const userId = req.user?.userId;
 
@@ -95,7 +91,7 @@ export const recordVisit = async (req: AuthRequest, res: Response) => {
 };
 
 // 搜索用户
-export const searchUsers = async (req: AuthRequest, res: Response) => {
+export const searchUsers = async (req, res) => {
   const { q } = req.query;
   if (!q || typeof q !== "string") {
     return sendResponse(res, 200, "获取成功", []);

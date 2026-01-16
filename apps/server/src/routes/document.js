@@ -14,8 +14,8 @@ import {
   restoreDocument,
   starDocument,
   updateDocument,
-} from "../controller/document";
-import { authMiddleware } from "../middlewares/auth";
+} from "../controller/document.js";
+import { authMiddleware } from "../middlewares/auth.js";
 
 const router = express.Router();
 

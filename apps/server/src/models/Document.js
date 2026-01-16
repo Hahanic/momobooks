@@ -1,26 +1,7 @@
 // 这张表决定了左侧侧边栏的结构、权限和基本信息。注意：这里不存文档内容！
-import mongoose, { Document, Schema, Types } from "mongoose";
+import mongoose, { Schema } from "mongoose";
 
-export interface IDocument extends Document {
-  title: string;
-  owner_id: Types.ObjectId;
-  parent_id: Types.ObjectId | null; // null 表示根目录下文档
-  icon?: string; // Emoji 或 URL
-  cover_image?: string;
-  is_public: boolean; // 是否开启 Web 分享
-  status: "active" | "archived" | "trashed"; // 软删除机制
-
-  // 协作者列表 (简单权限模型)
-  collaborators: Array<{
-    user_id: Types.ObjectId;
-    role: "editor" | "viewer";
-  }>;
-
-  // 纯文本缓存 (用于搜索，不用于渲染编辑器)
-  search_text?: string;
-}
-
-const DocumentSchema: Schema = new Schema(
+const DocumentSchema = new Schema(
   {
     title: { type: String, default: "Untitled" },
     owner_id: {
@@ -65,6 +46,6 @@ DocumentSchema.index({ owner_id: 1, parent_id: 1, status: 1 });
 // TTL 索引：30天后自动删除 trashed_at 存在的文档
 DocumentSchema.index({ trashed_at: 1 }, { expireAfterSeconds: 30 * 24 * 60 * 60 });
 
-const Doc = mongoose.model<IDocument>("Document", DocumentSchema);
+const Doc = mongoose.model("Document", DocumentSchema);
 
 export default Doc;

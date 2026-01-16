@@ -6,8 +6,6 @@ import type { TableRowSelection } from "antd/es/table/interface";
 
 import useSWR from "swr";
 
-import type { IDocumentResponse } from "@momobooks/shared";
-
 import docTableIcon from "../../assets/icon/doc_table.svg";
 import libcIcon from "../../assets/icon/lib.svg";
 import newdocIcon from "../../assets/icon/newdoc.svg";
@@ -23,6 +21,7 @@ import {
   getStarredDocuments,
 } from "../../services/documentService";
 import { useUserStore } from "../../store/userStore";
+import type { IDocumentResponse } from "../../types/index.ts";
 
 type TableDataItem = IDocumentResponse & { last_visited?: string };
 

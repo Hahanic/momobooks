@@ -1,4 +1,3 @@
-// 类型定义和共享逻辑
 export interface IUserCredentials {
   email: string;
   password: string;

@@ -1,20 +1,7 @@
 // 基础的用户信息，用于鉴权和个人资料展示。
-import mongoose, { Document, Schema } from "mongoose";
+import mongoose, { Schema } from "mongoose";
 
-export interface IUser extends Document {
-  email: string;
-  name: string;
-  avatar: string;
-  password: string;
-  created_at: Date;
-  recent_documents: {
-    document: mongoose.Types.ObjectId;
-    last_visited: Date;
-  }[];
-  starred_documents: mongoose.Types.ObjectId[];
-}
-
-const UserSchema: Schema = new Schema(
+const UserSchema = new Schema(
   {
     email: { type: String, required: true, unique: true, index: true },
     name: { type: String, required: true },
@@ -42,11 +29,8 @@ const UserSchema: Schema = new Schema(
     toJSON: {
       transform: function (_doc, ret) {
         delete ret.password;
-        // @ts-expect-error internal fields
         delete ret.__v;
-        // @ts-expect-error internal fields
         delete ret.created_at;
-        // @ts-expect-error internal fields
         delete ret.updated_at;
         return ret;
       },
@@ -54,11 +38,8 @@ const UserSchema: Schema = new Schema(
     toObject: {
       transform: function (_doc, ret) {
         delete ret.password;
-        // @ts-expect-error internal fields
         delete ret.__v;
-        // @ts-expect-error internal fields
         delete ret.created_at;
-        // @ts-expect-error internal fields
         delete ret.updated_at;
         return ret;
       },
@@ -66,6 +47,6 @@ const UserSchema: Schema = new Schema(
   },
 );
 
-const User = mongoose.model<IUser>("User", UserSchema);
+const User = mongoose.model("User", UserSchema);
 
 export default User;

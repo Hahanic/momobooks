@@ -1,17 +1,17 @@
 import { Database } from "@hocuspocus/extension-database";
-import { Hocuspocus } from "@hocuspocus/server";
+import { Server } from "@hocuspocus/server";
 import jwt from "jsonwebtoken";
 
-import Doc from "../models/Document";
-import DocState from "../models/DocumentState";
-import User from "../models/User";
+import Doc from "../models/Document.js";
+import DocState from "../models/DocumentState.js";
+import User from "../models/User.js";
 
-const JWT_SECRET = process.env.JWT_SECRET as string;
+const JWT_SECRET = process.env.JWT_SECRET;
 
-export const hocuspocusServer = new Hocuspocus({
+export const hocuspocusServer = new Server({
   timeout: 4000, // 连接超时
-  debounce: 2000, // 核心配置：防抖 2 秒后才触发 onStoreDocument，减少数据库压力
-  maxDebounce: 10000, // 最长 10 秒强制存一次
+  debounce: 2000, // 防抖 2 秒后才触发 onStoreDocument
+  maxDebounce: 10000, // 10 秒存一次数据库
 
   extensions: [
     new Database({
@@ -37,8 +37,6 @@ export const hocuspocusServer = new Hocuspocus({
           },
           { upsert: true, new: true },
         );
-
-        console.log(`[Hocuspocus] Saved doc ${documentName}`);
       },
     }),
   ],
@@ -55,7 +53,7 @@ export const hocuspocusServer = new Hocuspocus({
     }
 
     try {
-      const decoded = jwt.verify(token, JWT_SECRET) as { userId: string };
+      const decoded = jwt.verify(token, JWT_SECRET);
       const userId = decoded.userId;
       // 3.2 校验文档权限
       const docId = documentName;
@@ -81,7 +79,7 @@ export const hocuspocusServer = new Hocuspocus({
         throw new Error("Forbidden: You do not have access to this document");
       }
 
-      // 3.3 权限控制 (Read-Only)
+      // 3.3 权限控制
       // 默认只读
       let canEdit = false;
 
@@ -99,15 +97,14 @@ export const hocuspocusServer = new Hocuspocus({
       // 3.5 将用户信息注入上下文
       return {
         user: {
-          id: userId,
+          id: user._id.toString(),
           name: user.name,
-          avatar: user.avatar,
         },
-        readonly: !canEdit,
+        readOnly: !canEdit,
       };
-    } catch (err) {
-      console.error("Auth failed:", err);
-      throw new Error("Not authorized");
+    } catch (error) {
+      console.error("[Hocuspocus] Authentication error:", error.message);
+      throw error;
     }
   },
 });

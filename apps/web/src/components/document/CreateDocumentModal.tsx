@@ -6,12 +6,11 @@ import { App, Avatar, Form, Input, Modal, Select, Spin, Switch } from "antd";
 import { UserOutlined } from "@ant-design/icons";
 import { useSWRConfig } from "swr";
 
-import { type IUser } from "@momobooks/shared";
-
 import { debounce } from "../../lib/utils";
 import { authService } from "../../services/authService";
 import { createDocument } from "../../services/documentService";
 import { useUserStore } from "../../store/userStore";
+import { type IUser } from "../../types/index.ts";
 
 interface CreateDocumentModalProps {
   open: boolean;

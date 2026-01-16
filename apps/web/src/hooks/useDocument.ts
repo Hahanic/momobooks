@@ -1,10 +1,9 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 
-import { type IDocumentResponse } from "@momobooks/shared";
-
 import { getDocument } from "../services/documentService";
 import { useUserStore } from "../store/userStore";
+import { type IDocumentResponse } from "../types/index.ts";
 
 export const useDocument = () => {
   const { id } = useParams<{ id: string }>();

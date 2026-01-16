@@ -14,10 +14,9 @@ import { EditorContent, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import * as Y from "yjs";
 
-import { type IUser } from "@momobooks/shared";
-
 import { stringToColor } from "../lib/utils";
 import { useEditorStore } from "../store/editorStore";
+import { type IUser } from "../types/index.ts";
 import CustomHeading from "./extensions/heading";
 
 interface TiptapEditorProps {

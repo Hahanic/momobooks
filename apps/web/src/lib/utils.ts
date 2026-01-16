@@ -48,3 +48,14 @@ export function debounce<A extends unknown[], R>(func: (...args: A) => R, wait: 
     }, wait);
   };
 }
+
+export function throttle<A extends unknown[], R>(func: (...args: A) => R, limit: number) {
+  let inThrottle: boolean = false;
+  return function (...args: A) {
+    if (!inThrottle) {
+      func(...args);
+      inThrottle = true;
+      setTimeout(() => (inThrottle = false), limit);
+    }
+  };
+}

@@ -1,4 +1,4 @@
-module.exports = {
+const config = {
   extends: ["@commitlint/config-conventional"],
   rules: {
     "subject-case": [0], // 不强制要求 commit 描述的大小写
@@ -52,3 +52,5 @@ module.exports = {
     skipQuestions: ["body", "breaking", "footer"],
   },
 };
+
+export default config;

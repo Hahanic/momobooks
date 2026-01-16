@@ -1,13 +1,11 @@
-import { Response } from "express";
 import mongoose, { isValidObjectId } from "mongoose";
 
-import { AuthRequest } from "../middlewares/auth";
-import Document from "../models/Document";
-import User from "../models/User";
-import { sendResponse } from "../utils";
+import Document from "../models/Document.js";
+import User from "../models/User.js";
+import { sendResponse } from "../utils/index.js";
 
 // 创建新文档
-export const createDocument = async (req: AuthRequest, res: Response) => {
+export const createDocument = async (req, res) => {
   try {
     const { title, parent_id, is_public, collaborators } = req.body;
     const userId = req.user?.userId;
@@ -56,11 +54,10 @@ export const createDocument = async (req: AuthRequest, res: Response) => {
     await newDoc.save();
 
     const docResponse = newDoc.toObject();
-    // @ts-expect-error: __v exists in mongoose document but might not be in type
     delete docResponse.__v;
 
     // Add owner_info
-    (docResponse as any).owner_info = {
+    docResponse.owner_info = {
       _id: user._id,
       name: user.name,
       email: user.email,
@@ -75,7 +72,7 @@ export const createDocument = async (req: AuthRequest, res: Response) => {
 };
 
 // 获取用户的所有文档列表
-export const getDocuments = async (req: AuthRequest, res: Response) => {
+export const getDocuments = async (req, res) => {
   try {
     const userId = req.user?.userId;
 
@@ -95,7 +92,7 @@ export const getDocuments = async (req: AuthRequest, res: Response) => {
 
     const results = docs.map((doc) => ({
       ...doc,
-      owner_id: (doc.owner_id as any)._id,
+      owner_id: doc.owner_id._id,
       owner_info: doc.owner_id,
     }));
 
@@ -107,7 +104,7 @@ export const getDocuments = async (req: AuthRequest, res: Response) => {
 };
 
 // 获取单个文档信息
-export const getDocument = async (req: AuthRequest, res: Response) => {
+export const getDocument = async (req, res) => {
   try {
     const { id } = req.params;
     const userId = req.user?.userId;
@@ -127,11 +124,9 @@ export const getDocument = async (req: AuthRequest, res: Response) => {
     }
 
     // 简单的权限检查
-    const ownerIdStr = (doc.owner_id as any)._id.toString();
+    const ownerIdStr = doc.owner_id._id.toString();
     const isOwner = ownerIdStr === userId;
-    const isCollaborator = doc.collaborators.some(
-      (c) => (c.user_id as any)._id.toString() === userId,
-    );
+    const isCollaborator = doc.collaborators.some((c) => c.user_id._id.toString() === userId);
 
     if (!isOwner && !isCollaborator && !doc.is_public) {
       return sendResponse(res, 403, "无权访问该文档");
@@ -145,7 +140,7 @@ export const getDocument = async (req: AuthRequest, res: Response) => {
       ...doc,
       owner_id: ownerIdStr,
       owner_info: doc.owner_id,
-      collaborators: doc.collaborators.map((c: any) => ({
+      collaborators: doc.collaborators.map((c) => ({
         role: c.role,
         user_id: c.user_id._id,
         user_info: c.user_id,
@@ -181,7 +176,7 @@ export const getDocument = async (req: AuthRequest, res: Response) => {
 };
 
 // 获取最近访问的文档列表
-export const getRecent = async (req: AuthRequest, res: Response) => {
+export const getRecent = async (req, res) => {
   try {
     const userId = req.user?.userId;
 
@@ -201,10 +196,10 @@ export const getRecent = async (req: AuthRequest, res: Response) => {
       return sendResponse(res, 200, "获取成功", []);
     }
 
-    const recentDocs = user.recent_documents as unknown as [];
+    const recentDocs = user.recent_documents;
     const uniqueMap = new Map();
 
-    (recentDocs || []).forEach((item: any) => {
+    (recentDocs || []).forEach((item) => {
       if (item.document && item.document.status !== "trashed") {
         const docId = item.document._id.toString();
         if (!uniqueMap.has(docId)) {
@@ -228,7 +223,7 @@ export const getRecent = async (req: AuthRequest, res: Response) => {
 };
 
 // 获取收藏的文档列表
-export const getStarred = async (req: AuthRequest, res: Response) => {
+export const getStarred = async (req, res) => {
   try {
     const userId = req.user?.userId;
 
@@ -249,8 +244,8 @@ export const getStarred = async (req: AuthRequest, res: Response) => {
     }
 
     const starredDocs = (user.starred_documents || [])
-      .filter((doc: any) => doc && doc.status !== "trashed")
-      .map((doc: any) => ({
+      .filter((doc) => doc && doc.status !== "trashed")
+      .map((doc) => ({
         ...doc,
         owner_id: doc.owner_id._id,
         owner_info: doc.owner_id,
@@ -264,7 +259,7 @@ export const getStarred = async (req: AuthRequest, res: Response) => {
 };
 
 // 获取与我共享的文档列表
-export const getShared = async (req: AuthRequest, res: Response) => {
+export const getShared = async (req, res) => {
   try {
     const userId = req.user?.userId;
 
@@ -279,7 +274,7 @@ export const getShared = async (req: AuthRequest, res: Response) => {
 
     const results = docs.map((doc) => ({
       ...doc,
-      owner_id: (doc.owner_id as any)._id,
+      owner_id: doc.owner_id._id,
       owner_info: doc.owner_id,
     }));
 
@@ -291,7 +286,7 @@ export const getShared = async (req: AuthRequest, res: Response) => {
 };
 
 // 获取回收站文档列表
-export const getTrash = async (req: AuthRequest, res: Response) => {
+export const getTrash = async (req, res) => {
   try {
     const userId = req.user?.userId;
 
@@ -304,7 +299,7 @@ export const getTrash = async (req: AuthRequest, res: Response) => {
       .sort({ trashed_at: -1 })
       .lean();
 
-    const list = docs.map((doc: any) => {
+    const list = docs.map((doc) => {
       let daysRemaining = 30;
       if (doc.trashed_at) {
         const diffTime = Math.abs(new Date().getTime() - new Date(doc.trashed_at).getTime());
@@ -327,7 +322,7 @@ export const getTrash = async (req: AuthRequest, res: Response) => {
 };
 
 // 重命名文档
-export const renameDocument = async (req: AuthRequest, res: Response) => {
+export const renameDocument = async (req, res) => {
   try {
     const { id } = req.params;
     const { title } = req.body;
@@ -362,7 +357,7 @@ export const renameDocument = async (req: AuthRequest, res: Response) => {
 };
 
 // 更新文档（通用更新，包括协作者和公开状态）
-export const updateDocument = async (req: AuthRequest, res: Response) => {
+export const updateDocument = async (req, res) => {
   try {
     const { id } = req.params;
     const { title, is_public, collaborators } = req.body;
@@ -407,10 +402,10 @@ export const updateDocument = async (req: AuthRequest, res: Response) => {
     await doc.populate("owner_id", "name email avatar");
     const result = {
       ...doc.toObject(),
-      owner_id: (doc.owner_id as any)._id,
+      owner_id: doc.owner_id._id,
       owner_info: doc.owner_id,
     };
-    // @ts-expect-error: __v exists
+
     delete result.__v;
 
     sendResponse(res, 200, "更新成功", result);
@@ -421,7 +416,7 @@ export const updateDocument = async (req: AuthRequest, res: Response) => {
 };
 
 // 收藏文档
-export const starDocument = async (req: AuthRequest, res: Response) => {
+export const starDocument = async (req, res) => {
   try {
     const { id } = req.body;
     const userId = req.user?.userId;
@@ -455,7 +450,7 @@ export const starDocument = async (req: AuthRequest, res: Response) => {
 };
 
 // 删除文档（软删除）
-export const deleteDocument = async (req: AuthRequest, res: Response) => {
+export const deleteDocument = async (req, res) => {
   try {
     const { id } = req.params;
     const userId = req.user?.userId;
@@ -490,7 +485,7 @@ export const deleteDocument = async (req: AuthRequest, res: Response) => {
 
     const targetIds = [id];
     if (descendants.length > 0 && descendants[0].children) {
-      descendants[0].children.forEach((child: any) => {
+      descendants[0].children.forEach((child) => {
         targetIds.push(child._id);
       });
     }
@@ -509,7 +504,7 @@ export const deleteDocument = async (req: AuthRequest, res: Response) => {
 };
 
 // 恢复文档
-export const restoreDocument = async (req: AuthRequest, res: Response) => {
+export const restoreDocument = async (req, res) => {
   try {
     const { id } = req.params;
     const userId = req.user?.userId;
@@ -544,7 +539,7 @@ export const restoreDocument = async (req: AuthRequest, res: Response) => {
 
     const targetIds = [id];
     if (descendants.length > 0 && descendants[0].children) {
-      descendants[0].children.forEach((child: any) => {
+      descendants[0].children.forEach((child) => {
         targetIds.push(child._id);
       });
     }
@@ -563,7 +558,7 @@ export const restoreDocument = async (req: AuthRequest, res: Response) => {
 };
 
 // 彻底删除文档
-export const permanentDeleteDocument = async (req: AuthRequest, res: Response) => {
+export const permanentDeleteDocument = async (req, res) => {
   try {
     const { id } = req.params;
     const userId = req.user?.userId;
@@ -598,7 +593,7 @@ export const permanentDeleteDocument = async (req: AuthRequest, res: Response) =
 
     const targetIds = [id];
     if (descendants.length > 0 && descendants[0].children) {
-      descendants[0].children.forEach((child: any) => {
+      descendants[0].children.forEach((child) => {
         targetIds.push(child._id);
       });
     }

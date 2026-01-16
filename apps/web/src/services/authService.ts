@@ -1,6 +1,5 @@
-import { type IUser } from "@momobooks/shared";
-
 import api from "../lib/api";
+import { type IUser } from "../types/index.ts";
 
 interface AuthResponse {
   message: string;
