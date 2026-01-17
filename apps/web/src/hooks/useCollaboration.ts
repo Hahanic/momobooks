@@ -14,22 +14,13 @@ function useCollaboration(documentId: string) {
   useEffect(() => {
     if (!token || !documentId) return;
 
-    // 设置一个标志位，防止组件卸载后还在设置状态
-    let isMounted = true;
-
     // 初始化
     const doc = new Y.Doc();
     const newProvider = createCollaborationProvider(documentId, token, doc);
 
-    // 只有当组件依然挂载时，才更新状态
-    if (isMounted) {
-      setData({ ydoc: doc, provider: newProvider });
-    }
+    setData({ ydoc: doc, provider: newProvider });
 
     return () => {
-      // 标记为已卸载
-      isMounted = false;
-
       // 销毁连接
       newProvider.destroy();
       doc.destroy();

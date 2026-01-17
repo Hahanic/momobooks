@@ -1,4 +1,3 @@
-// 这张表决定了左侧侧边栏的结构、权限和基本信息。注意：这里不存文档内容！
 import mongoose, { Schema } from "mongoose";
 
 const DocumentSchema = new Schema(

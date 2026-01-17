@@ -78,7 +78,7 @@ const TiptapEditor = memo(({ ydoc, provider, user, editable }: TiptapEditorProps
         }),
       ],
     },
-    [ydoc, provider],
+    [ydoc, provider, editable],
   ); // 依赖项变化时重建编辑器
 
   useEffect(() => {
