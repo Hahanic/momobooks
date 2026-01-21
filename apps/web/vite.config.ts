@@ -53,12 +53,13 @@ export default defineConfig({
               return "editor-core";
             }
 
-            // 3. UI 框架核心 (AntD + 图标)
-            if (/[\\/]node_modules[\\/](@ant-design\/icons|lucide-react)[\\/]/.test(id)) {
-              return "ui-icons";
-            }
-            if (/[\\/]node_modules[\\/](antd|@ant-design|rc-.*|@rc-component)[\\/]/.test(id)) {
-              return "ui-vendor";
+            // 3. UI 框架核心 (合并 AntD, Icons, Lucide)
+            if (
+              /[\\/]node_modules[\\/](antd|@ant-design|rc-.*|@rc-component|lucide-react)[\\/]/.test(
+                id,
+              )
+            ) {
+              return "ui-lib";
             }
 
             // 4. 协作与工具

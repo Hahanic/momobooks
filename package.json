@@ -11,7 +11,7 @@
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md,css,scss}\"",
     "commit": "git-cz",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "prepare": "husky"
+    "prepare": "husky || true"
   },
   "config": {
     "commitizen": {

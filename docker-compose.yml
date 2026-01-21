@@ -1,0 +1,60 @@
+services:
+  mongodb:
+    image: mongo:6.0
+    restart: always
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_USER}
+      MONGO_INITDB_ROOT_PASSWORD: ${PASSWORD}
+    volumes:
+      - ./data/db:/data/db
+    networks:
+      - momo-network
+
+  server:
+    build:
+      context: .
+      dockerfile: apps/server/Dockerfile
+    restart: always
+    depends_on:
+      - mongodb
+    environment:
+      - PORT=${PORT}
+      - DBHOST=${DBHOST}
+      - DBPORT=${DBPORT}
+      - DBNAME=${DBNAME}
+      - MONGO_USER=${MONGO_USER}
+      - PASSWORD=${PASSWORD}
+      - JWT_SECRET=${JWT_SECRET}
+      - CLIENT_URL=${CLIENT_URL}
+      - NODE_ENV=production
+    networks:
+      - momo-network
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+      args:
+        - VITE_API_BASE_URL=${VITE_API_BASE_URL}
+        - VITE_WS_URL=${VITE_WS_URL}
+    restart: always
+    networks:
+      - momo-network
+
+  nginx:
+    image: nginx:stable-alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+      - ./nginx/certs:/etc/nginx/certs:ro
+    depends_on:
+      - web
+      - server
+    networks:
+      - momo-network
+
+networks:
+  momo-network:
+    driver: bridge
